@@ -10,6 +10,11 @@ from services.Procesamiento_Similitud import (
     analizar_proyecto as analizar_proyecto_individual_service,
     obtener_tolerancias # Importar para usar en la ruta de análisis individual
 )
+from services.Procesamiento_Semantico import ( # Importar el nuevo servicio SEMÁNTICO
+    analizar_todos_los_proyectos_semantico_service,
+    analizar_proyecto_semantico as analizar_proyecto_semantico_individual_service,
+    obtener_tolerancias_semantico
+)
 from sqlalchemy import text
 import math
 
@@ -200,8 +205,8 @@ def mostrar_detalles_proyecto_semantico(proyecto_id):
                             tipo_analisis="semantico")
 
 
-@analisis.route('/iniciar-analisis-global', methods=['POST'])
-def iniciar_analisis_global_route():
+@analisis.route('/iniciar-analisis-global-sintactico', methods=['POST'])
+def iniciar_analisis_global_sintactico_route():
     """
     Ruta para iniciar el análisis de similitud para todos los proyectos.
     """
@@ -218,9 +223,26 @@ def iniciar_analisis_global_route():
     except Exception as e:
         current_app.logger.error(f"Excepción no controlada en iniciar_analisis_global_route: {str(e)}", exc_info=True)
         return jsonify({"estado": "error", "mensaje": "Error inesperado en el servidor al procesar la solicitud."}), 500
+    
+@analisis.route('/iniciar-analisis-global-semantico', methods=['POST'])
+def iniciar_analisis_global_semantico_route():
+    current_app.logger.info("Solicitud POST recibida en /iniciar-analisis-global-semantico")
+    try:
+        # Llama a la función de servicio para el análisis semántico global
+        resultado_analisis = analizar_todos_los_proyectos_semantico_service() 
+        current_app.logger.info(f"Resultado del análisis SEMÁNTICO global: {resultado_analisis}")
+        
+        if resultado_analisis.get("estado") == "error":
+            return jsonify(resultado_analisis), 500 # Error interno del servidor
+        
+        return jsonify(resultado_analisis), 200 # Éxito
+        
+    except Exception as e:
+        current_app.logger.error(f"Excepción no controlada en iniciar_analisis_global_semantico_route: {str(e)}", exc_info=True)
+        return jsonify({"estado": "error", "mensaje": "Error inesperado en el servidor al procesar la solicitud de análisis semántico."}), 500
 
-@analisis.route('/iniciar-analisis/<int:proyecto_id>', methods=['POST'])
-def iniciar_analisis_individual_route(proyecto_id):
+@analisis.route('/iniciar-analisis-individual-sintactico/<int:proyecto_id>', methods=['POST'])
+def iniciar_analisis_individual_sintactico_route(proyecto_id):
     """
     Ruta para iniciar el análisis de un proyecto específico.
     Llamada por el botón "Analizar" de la tabla.
