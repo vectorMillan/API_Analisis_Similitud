@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+<h1>Actualizar</h1>
+
+<form action="/update/{{seccion.id}}" method="POST">
+    <input type="text" name="seccion" placeholder="Ingresa la sección del reporte" value = '{{seccion.seccion}}' required>
+    <input type="number" name="tolerancia" step="0.01" placeholder="Ingresa la tolerancia (ej. 0.5)" value = '{{seccion.tolerancia}}' required>
+    <button type="submit">Guardar</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,30 @@
+<form action="/new" method="POST" class="card bg-dark text-light">
+
+    <div class="card-body p-4">
+        <div class="mb-3">
+            <label for="seccion">Escribe el nombre de la seccion:</label>
+            <input 
+                type="text" 
+                name="seccion" 
+                class="form-control rounded-0 bg-dark border-0 text-white" 
+                placeholder="Ingresa la sección del reporte"  
+                required 
+            />
+        </div>
+
+        <div class="mb-3">
+            <label for="tolerancia">Escribe la tolerancia:</label>
+            <input 
+                type="number" 
+                name="tolerancia" 
+                step="0.01" 
+                class="form-control rounded-0 bg-dark border-0 text-light"  
+                placeholder="Ingresa la tolerancia (ej. 0.5)" 
+                required 
+            />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+    
+</form>

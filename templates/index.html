@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Similitud - Verano Científico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 2rem;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .progress {
+            height: 25px;
+        }
+        .card {
+            margin-top: 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+        .result-box {
+            display: none;
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+        .invisible {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Análisis de Similitud - Verano Científico</h1>
+        
+        <div class="card">
+            <div class="card-header">
+                Análisis de Proyectos
+            </div>
+            <div class="card-body">
+                <div id="contador-proyectos" class="invisible">
+                    <p class="fs-5">Se encontraron <span id="total-proyectos" class="fw-bold">0</span> proyectos para analizar.</p>
+                </div>
+                
+                <button id="iniciar-analisis" class="btn btn-primary btn-lg w-100">Iniciar Análisis de Proyectos</button>
+                
+                <div id="progreso-container" style="display: none; margin-top: 1.5rem;">
+                    <p>Progreso: <span id="proyectos-analizados">0</span>/<span id="total-proyectos-progreso">0</span> proyectos</p>
+                    <div class="progress">
+                        <div id="barra-progreso" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p class="mt-2">Tiempo estimado para completar: <span id="tiempo-estimado">Calculando...</span></p>
+                </div>
+                
+                <div id="resultado-analisis" class="result-box">
+                    <h4 class="text-center text-success mb-3">¡Análisis de todos los proyectos completado!</h4>
+                    <p>Tiempo total de ejecución: <span id="tiempo-total" class="fw-bold">0s</span></p>
+                    <p>Tiempo promedio por proyecto: <span id="tiempo-promedio" class="fw-bold">0s</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Obtener recuento inicial de proyectos
+            $.get('/proyectos/contar', function(data) {
+                if (data.status === 'success') {
+                    $('#total-proyectos').text(data.total_proyectos);
+                    $('#total-proyectos-progreso').text(data.total_proyectos);
+                    $('#contador-proyectos').removeClass('invisible');
+                }
+            });
+            
+            // Iniciar análisis de proyectos
+            $('#iniciar-analisis').click(function() {
+                $(this).prop('disabled', true).text('Analizando...');
+                $('#progreso-container').show();
+                
+                $.post('/proyectos/analizar', function(data) {
+                    if (data.status === 'error') {
+                        alert(data.message);
+                        $('#iniciar-analisis').prop('disabled', false).text('Iniciar Análisis de Proyectos');
+                    } else {
+                        // Iniciar verificación de progreso
+                        verificarProgreso();
+                    }
+                });
+            });
+            
+            // Función para verificar progreso
+            function verificarProgreso() {
+                $.get('/proyectos/progreso', function(data) {
+                    if (data.status === 'success') {
+                        // Actualizar contador
+                        $('#proyectos-analizados').text(data.proyectos_analizados);
+                        
+                        // Actualizar barra de progreso
+                        const porcentaje = data.porcentaje.toFixed(1);
+                        $('#barra-progreso').css('width', porcentaje + '%').text(porcentaje + '%');
+                        
+                        // Actualizar tiempo estimado
+                        $('#tiempo-estimado').text(data.tiempo_estimado_restante);
+                        
+                        // Si ha terminado
+                        if (!data.en_progreso) {
+                            $('#iniciar-analisis').text('Análisis Completado').removeClass('btn-primary').addClass('btn-success');
+                            $('#tiempo-total').text(data.tiempo_total);
+                            $('#tiempo-promedio').text(data.tiempo_promedio);
+                            $('#resultado-analisis').show();
+                            return;
+                        }
+                        
+                        // Verificar de nuevo en 1 segundo
+                        setTimeout(verificarProgreso, 1000);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="container mt-4">
+    <h1>Ajustar Tolerancia de Porcentajes de Similitud en Reportes</h1>
+
+    <div class="row">
+        <div class="col-md-12">
+
+            {% if secciones %}
+            {% for seccion in secciones %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Sección: {{ seccion.seccion }}</h5>
+                    <p class="card-text">Porcentaje de Similitud: {{ seccion.tolerancia }}</p>
+                    <form action="/update/{{ seccion.id }}" method="POST" class="d-flex justify-content-between">
+                        <input type="number" name="tolerancia" step="0.01" class="form-control me-2" placeholder="Nueva Tolerancia (ej. 0.5)" required>
+                        <button type="submit" class="btn btn-primary">Actualizar</button>
+                </div>
+            </div> {% endfor %}
+            {% else %}
+            <p>No hay secciones registradas.</p>
+            {% endif %}
+
+        </div>
+    </div>
+</div> {% endblock %}
