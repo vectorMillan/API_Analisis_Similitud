@@ -20,8 +20,6 @@ class ComparacionSimilitud(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Un __init__ más completo podría ser así, aunque SQLAlchemy puede inferirlo.
-    # Los defaults en las columnas ya manejan valores iniciales si no se proveen.
     def __init__(self, usuario_1_id, usuario_2_id, project_id, 
                 introduccion=0.0, marcoteorico=0.0, metodo=0.0, 
                 resultados=0.0, discusion=0.0, conclusiones=0.0,

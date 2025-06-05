@@ -1,5 +1,3 @@
-# services/Procesamiento_Semantico.py
-
 import pandas as pd
 import spacy
 import numpy as np
@@ -26,20 +24,16 @@ except OSError:
         "Por favor, descárgalo ejecutando: python -m spacy download es_core_news_md")
     nlp_spacy = None
 
-print("Cargando modelo SentenceTransformer 'all-MiniLM-L6-v2' para análisis semántico...")
+print("Cargando modelo SentenceTransformer 'paraphrase-multilingual-MiniLM-L12-v2' para análisis semántico...")
 try:
-    model_sentence_transformer = SentenceTransformer("all-MiniLM-L6-v2")
-    print("Modelo SentenceTransformer 'all-MiniLM-L6-v2' cargado exitosamente.")
+    model_sentence_transformer = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+    print("Modelo SentenceTransformer 'paraphrase-multilingual-MiniLM-L12-v2' cargado exitosamente.")
 except Exception as e:
-    print(f"Error cargando el modelo SentenceTransformer 'all-MiniLM-L6-v2': {e}")
+    print(f"Error cargando el modelo SentenceTransformer 'paraphrase-multilingual-MiniLM-L12-v2': {e}")
     traceback.print_exc()
     model_sentence_transformer = None
 
 def obtener_tolerancias_semantico():
-    """
-    Obtiene las tolerancias de similitud desde la base de datos.
-    """
-    # from flask import current_app # Para logging
     try:
         registros_tolerancia = ToleranciasPorcentajes.query.all()
         tolerancias_dict = {}
@@ -54,7 +48,8 @@ def obtener_tolerancias_semantico():
         traceback.print_exc()
         return None
 
-def insertar_o_actualizar_comparacion_semantica(usuario_1_id, usuario_2_id, project_id, similitudes_dict, secciones_similares_count):
+def insertar_o_actualizar_comparacion_semantica(usuario_1_id, usuario_2_id, project_id, 
+                                            similitudes_dict, secciones_similares_count):
     """
     Inserta o actualiza un registro de comparación de similitud semántica
     en la tabla 'comparacion_similitud2'.
@@ -127,11 +122,6 @@ def insertar_o_actualizar_comparacion_semantica(usuario_1_id, usuario_2_id, proj
         traceback.print_exc()
 
 def analizar_proyecto_semantico(project_id_param, tolerancias_externas=None):
-    """
-    Analiza la similitud semántica de los reportes dentro de un proyecto dado.
-    Utiliza SentenceTransformer para generar embeddings y calcular similitud coseno.
-    """
-    # from flask import current_app # Para logging
 
     if not model_sentence_transformer:
         error_msg = "Error crítico (Semántico): El modelo SentenceTransformer no está cargado. Abortando análisis."

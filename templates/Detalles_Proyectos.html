@@ -21,16 +21,6 @@
                     <h4>Análisis de Similitud - {{ proyecto.name }}</h4>
                 </div>
 
-                <div class="btn-group mt-4" role="group" aria-label="Basic radio toggle button group">
-                    <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" {% if
-                        tipo_analisis=='sintactico' %}checked{% endif %}>
-                    <label class="btn btn-outline-primary" for="btnradio1">Detalle Sintáctica</label>
-
-                    <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" {% if
-                        tipo_analisis=='semantico' %}checked{% endif %}>
-                    <label class="btn btn-outline-primary" for="btnradio2">Detalle Semántica</label>
-                </div>
-
                 <div class="card-body mt-4">
                     {% if detalles %}
                     <div class="table-responsive">
@@ -38,51 +28,94 @@
                             <thead>
                                 <tr>
                                     <th>Usuarios Comparados</th>
-                                    <th>Introducción</th>
-                                    <th>Marco Teórico</th>
-                                    <th>Método</th>
-                                    <th>Resultados</th>
-                                    <th>Discusión</th>
-                                    <th>Conclusiones</th>
-                                    <th>Secciones Similares</th>
-                                    <th>Estado</th>
+                                    <th>Introducción (Sintáctico)</th>
+                                    <th>Introducción (Semántico)</th>
+                                    <th>Marco Teórico (Sintáctico)</th>
+                                    <th>Marco Teórico (Semántico)</th>
+                                    <th>Método (Sintáctico)</th>
+                                    <th>Método (Semántico)</th>
+                                    <th>Resultados (Sintáctico)</th>
+                                    <th>Resultados (Semántico)</th>
+                                    <th>Discusión (Sintáctico)</th>
+                                    <th>Discusión (Semántico)</th>
+                                    <th>Conclusiones (Sintáctico)</th>
+                                    <th>Conclusiones (Semántico)</th>
+                                    <th>Secciones Duplicadas (Sintáctico)</th>
+                                    <th>Secciones Duplicadas (Semántico)</th>
+                                    <th>Estado (Sintáctico)</th>
+                                    <th>Estado (Semántico)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for detalle in detalles %}
                                 <tr>
-                                    <td class="{% if detalle.secciones_similares > 0 %}table-danger{% endif %}"
+                                    <td class="{% if detalle.secs_cs1 > 0 %}table-danger{% endif %}"
                                         style="white-space: pre-line;">
                                         {{ detalle.usuarios_analizados }}</td>
                                     <td
-                                        class="{% if detalle.introduccion > tolerancias.get('introduccion', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.introduccion * 100) }}%
+                                        class="{% if detalle.intro_cs1 > tolerancias.get('introduccion', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.intro_cs1 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.marcoteorico > tolerancias.get('marcoteorico', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.marcoteorico * 100) }}%
+                                        class="{% if detalle.intro_cs2 > tolerancias.get('introduccion', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.intro_cs2 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.metodo > tolerancias.get('metodo', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.metodo * 100) }}%
+                                        class="{% if detalle.marco_cs1 > tolerancias.get('marcoteorico', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.marco_cs1 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.resultados > tolerancias.get('resultados', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.resultados * 100) }}%
+                                        class="{% if detalle.marco_cs2 > tolerancias.get('marcoteorico', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.marco_cs2 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.discusion > tolerancias.get('discusion', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.discusion * 100) }}%
+                                        class="{% if detalle.metodo_cs1 > tolerancias.get('metodo', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.metodo_cs1 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.conclusiones > tolerancias.get('conclusiones', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.conclusiones * 100) }}%
+                                        class="{% if detalle.metodo_cs2 > tolerancias.get('metodo', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.metodo_cs2 * 100) }}%
                                     </td>
-                                    <td class="{% if detalle.secciones_similares > 0 %}table-danger{% endif %}">
-                                        <strong>{{ detalle.secciones_similares }}</strong>
+                                    <td
+                                        class="{% if detalle.res_cs1 > tolerancias.get('resultados', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.res_cs1 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.res_cs2 > tolerancias.get('resultados', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.res_cs2 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.disc_cs1 > tolerancias.get('discusion', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.disc_cs1 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.disc_cs2 > tolerancias.get('discusion', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.disc_cs2 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.concl_cs1 > tolerancias.get('conclusiones', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.concl_cs1 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.concl_cs2 > tolerancias.get('conclusiones', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.concl_cs2 * 100) }}%
+                                    </td>
+                                    <td class="{% if detalle.secs_cs1 > 0 %}table-danger{% endif %}">
+                                        <strong>{{ detalle.secs_cs1 }}</strong>
+                                    </td>
+                                    <td class="{% if detalle.secs_cs2 > 0 %}table-danger{% endif %}">
+                                        <strong>{{ detalle.secs_cs2 }}</strong>
                                     </td>
                                     <td>
-                                        {% if detalle.status_analisis == 1 %}
+                                        {% if detalle.status_cs1 == 1 %}
+                                        <span class="badge bg-success">Analizado</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pendiente</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if detalle.status_cs2 == 1 %}
                                         <span class="badge bg-success">Analizado</span>
                                         {% else %}
                                         <span class="badge bg-warning">Pendiente</span>
@@ -113,48 +146,6 @@
         </div>
     </div>
 
-    {% for detalle in detalles%}
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h4>Detalles del Análisis de Similitud</h4>
-                </div>
-                <div class="card-body">
-                    <p><strong>Usuarios Comparados:</strong> {{ detalle.usuarios_analizados }}</p>
-                    <p><strong>Secciones Similares:</strong> {{ detalle.secciones_similares }}</p>
-                    <p><strong>Estado:</strong> {% if detalle.status_analisis == 1 %}Analizado{% else %}Pendiente{%
-                        endif %}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const radioSintactico = document.getElementById('btnradio1');
-        const radioSemantico = document.getElementById('btnradio2');
-        const proyectoId = "{{ proyecto_id }}"; // Obtener el ID del proyecto desde el contexto de Jinja2
-
-        if (radioSintactico) {
-            radioSintactico.addEventListener('change', function () {
-                if (this.checked) {
-                    window.location.href = `/proyecto/${proyectoId}/analisis`;
-                }
-            });
-        }
-
-        if (radioSemantico) {
-            radioSemantico.addEventListener('change', function () {
-                if (this.checked) {
-                    window.location.href = `/proyecto/${proyectoId}/analisis-semantico`;
-                }
-            });
-        }
-    });
-</script>
 
 {% endblock %}

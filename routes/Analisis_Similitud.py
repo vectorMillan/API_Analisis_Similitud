@@ -130,24 +130,45 @@ def mostrar_detalles_proyecto(proyecto_id):
     # Consulta para obtener los detalles de similitud
     sql_detalles = text("""
         SELECT
-            CONCAT(
-                u1.name, ' ', u1.falastname, ' ', u1.molastname,
-                '\nvs\n',
-                u2.name, ' ', u2.falastname, ' ', u2.molastname
-            ) AS usuarios_analizados,
-            cs.introduccion,
-            cs.marcoteorico,
-            cs.metodo,
-            cs.resultados,
-            cs.discusion,
-            cs.conclusiones,
-            cs.secciones_similares,
-            cs.status_analisis
-        FROM comparacion_similitud cs
-        JOIN user u1 ON cs.usuario_1_id = u1.id
-        JOIN user u2 ON cs.usuario_2_id = u2.id
-        WHERE cs.project_id = :proyecto_id
-        ORDER BY cs.id
+        CONCAT(
+            u1.name, ' ', u1.falastname, ' ', u1.molastname,
+            '\n vs \n',
+            u2.name, ' ', u2.falastname, ' ', u2.molastname
+        ) AS usuarios_analizados,
+
+        -- Campos de comparacion_similitud
+        cs1.introduccion      AS intro_cs1,
+        cs1.marcoteorico      AS marco_cs1,
+        cs1.metodo            AS metodo_cs1,
+        cs1.resultados        AS res_cs1,
+        cs1.discusion         AS disc_cs1,
+        cs1.conclusiones      AS concl_cs1,
+        cs1.secciones_similares AS secs_cs1,
+        cs1.status_analisis as status_cs1,
+
+        -- Campos de comparacion_similitud2
+        cs2.introduccion      AS intro_cs2,
+        cs2.marcoteorico      AS marco_cs2,
+        cs2.metodo            AS metodo_cs2,
+        cs2.resultados        AS res_cs2,
+        cs2.discusion         AS disc_cs2,
+        cs2.conclusiones      AS concl_cs2,
+        cs2.secciones_similares AS secs_cs2,
+        cs2.status_analisis as status_cs2
+
+    FROM comparacion_similitud  cs1
+    JOIN comparacion_similitud2 cs2
+    ON cs1.project_id    = cs2.project_id
+    AND cs1.usuario_1_id  = cs2.usuario_1_id
+    AND cs1.usuario_2_id  = cs2.usuario_2_id
+
+    JOIN `user` u1
+    ON cs1.usuario_1_id = u1.id
+    JOIN `user` u2
+    ON cs1.usuario_2_id = u2.id
+
+    WHERE cs1.project_id = :proyecto_id
+    ORDER BY cs1.id;
     """)
     
     detalles = db.session.execute(sql_detalles, {"proyecto_id": proyecto_id}).fetchall()

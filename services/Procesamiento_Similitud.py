@@ -13,9 +13,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from models.Reportes_Finales import ReportesFinales
 from models.Tolerancia_Porcentajes import ToleranciasPorcentajes
 from models.Comparacion_Similitud import ComparacionSimilitud
-# Asegúrate que tu modelo Project (si existe) o el modelo que contiene los IDs de proyecto esté importado.
-# Si no hay un modelo Project, obtendremos los IDs de ReportesFinales.
-# from models.Project import Project # Ejemplo si tuvieras un modelo Project
+
 from config.config import db
 
 # --- Carga del modelo spaCy ---
@@ -25,20 +23,17 @@ except OSError:
     print("Modelo 'es_core_news_md' no encontrado. "
         "Por favor, descárgalo ejecutando: python -m spacy download es_core_news_md")
     nlp = None
-    # En una app Flask real, esto podría ser un error crítico.
-    # Considerar usar current_app.logger.critical() y posiblemente detener la app.
 
 # --- Función de preprocesamiento ---
 def preprocesar_texto(texto):
     if not nlp:
         print("Error: El modelo de spaCy 'es_core_news_md' no está cargado.")
-        # from flask import current_app
-        # current_app.logger.error("El modelo de spaCy 'es_core_news_md' no está cargado.")
         return "" 
     if pd.isna(texto) or not texto:
         return ""
     doc = nlp(str(texto))
-    lemas = [token.lemma_.lower() for token in doc if not token.is_stop and not token.is_punct and token.lemma_.strip()]
+    lemas = [token.lemma_.lower() for token in doc if not token.is_stop 
+            and not token.is_punct and token.lemma_.strip()]
     return " ".join(lemas)
 
 # --- Función para obtener tolerancias ---
@@ -51,13 +46,11 @@ def obtener_tolerancias():
             tolerancias_dict[seccion_normalizada] = registro.tolerancia
         if not tolerancias_dict:
             print("Advertencia: No se encontraron registros de tolerancia en la base de datos.")
-            # from flask import current_app
-            # current_app.logger.warning("No se encontraron registros de tolerancia en la base de datos.")
+
         return tolerancias_dict
     except Exception as e:
         print(f"Error obteniendo tolerancias desde la base de datos: {str(e)}")
-        # from flask import current_app
-        # current_app.logger.error(f"Error obteniendo tolerancias desde la base de datos: {str(e)}")
+
         return None
 
 # --- Función para insertar o actualizar comparación ---
@@ -124,22 +117,13 @@ def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id, si
     except Exception as e:
         db.session.rollback()
         print(f"Error al interactuar con comparacion_similitud DB: {e}")
-        # from flask import current_app
-        # current_app.logger.error(f"Error al interactuar con comparacion_similitud DB: {e}")
         import traceback
         traceback.print_exc()
 
 # --- Función para analizar un proyecto individual ---
 def analizar_proyecto(project_id_param, tolerancias): # Pasamos tolerancias como argumento
-    """
-    Analiza la similitud de los reportes dentro de un proyecto dado.
-    Tolerancias se obtienen una vez y se pasan para evitar consultas repetidas.
-    """
+
     print(f"Iniciando análisis para el proyecto ID: {project_id_param}")
-    # Las tolerancias ahora se pasan como argumento, no se obtienen aquí.
-    # if tolerancias is None:
-    #     print(f"Error crítico: No se pudieron obtener las tolerancias para el proyecto {project_id_param}.")
-    #     return
 
     reportes_del_proyecto = ReportesFinales.query.filter_by(project_id=project_id_param).all()
 
@@ -219,14 +203,8 @@ def analizar_proyecto(project_id_param, tolerancias): # Pasamos tolerancias como
 
 # --- Nueva función para analizar todos los proyectos (adaptada) ---
 def analizar_todos_los_proyectos_service():
-    """
-    Analiza todos los proyectos que tienen reportes finales.
-    Retorna estadísticas del análisis.
-    """
-    # from flask import current_app # Para logging en Flask
 
     print("Iniciando el análisis de todos los proyectos...")
-    # current_app.logger.info("Iniciando el análisis de todos los proyectos...")
 
     # Obtener tolerancias una sola vez al inicio
     tolerancias = obtener_tolerancias()
@@ -248,28 +226,20 @@ def analizar_todos_los_proyectos_service():
         if not project_ids:
             msg = "No se encontraron proyectos con reportes para analizar."
             print(msg)
-            # current_app.logger.info(msg)
             return {"estado": "completado", "mensaje": msg, "proyectos_analizados": 0, "tiempo_total": 0}
 
         print(f"Se encontraron {total_proyectos_encontrados} proyectos únicos con reportes para analizar.")
-        # current_app.logger.info(f"Se encontraron {total_proyectos_encontrados} proyectos para analizar.")
             
         tiempo_inicio_total = time.time()
         proyectos_procesados_count = 0
         
-        # No usaremos tqdm aquí, el progreso se manejaría en el frontend si es asíncrono.
-        # Por ahora, esto es síncrono y los prints van al log del servidor.
         for i, project_id in enumerate(project_ids, 1):
             print(f"\n{'=' * 40}")
             print(f"Procesando proyecto {i}/{total_proyectos_encontrados}: ID {project_id}")
-            # current_app.logger.info(f"Procesando proyecto {i}/{total_proyectos_encontrados}: ID {project_id}")
             print(f"{'=' * 40}\n")
             
             analizar_proyecto(project_id, tolerancias) # Pasar las tolerancias obtenidas
             proyectos_procesados_count +=1
-            
-            # Aquí podrías emitir un evento de progreso si usaras SSE o WebSockets
-            # Ejemplo: emit_event('progress_update', {'current': i, 'total': total_proyectos_encontrados, 'project_id': project_id})
 
         tiempo_total_segundos = time.time() - tiempo_inicio_total
         

@@ -1,27 +1,189 @@
 {% extends "layout.html" %}
+
+{% block title %}Ajustar Tolerancias de Similitud{% endblock %}
+
 {% block body %}
-
-<div class="container mt-4">
-    <h1>Ajustar Tolerancia de Porcentajes de Similitud en Reportes</h1>
-
-    <div class="row">
+<div class="container mt-5">
+    <div class="row mb-4">
         <div class="col-md-12">
-
-            {% if secciones %}
-            {% for seccion in secciones %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Sección: {{ seccion.seccion }}</h5>
-                    <p class="card-text">Porcentaje de Similitud: {{ seccion.tolerancia }}</p>
-                    <form action="/update/{{ seccion.id }}" method="POST" class="d-flex justify-content-between">
-                        <input type="number" name="tolerancia" step="0.01" class="form-control me-2" placeholder="Nueva Tolerancia (ej. 0.5)" required>
-                        <button type="submit" class="btn btn-primary">Actualizar</button>
-                </div>
-            </div> {% endfor %}
-            {% else %}
-            <p>No hay secciones registradas.</p>
-            {% endif %}
-
+            <h1 class="display-5 text-center">Ajustar Tolerancias de Similitud</h1>
+            <p class="lead text-center text-muted">Modifica los umbrales de porcentaje para cada sección de los reportes.</p>
         </div>
     </div>
-</div> {% endblock %}
+
+    {# Área para mostrar mensajes de estado globales (éxito/error) #}
+    <div id="global-message-area" class="mb-3"></div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            {% if secciones %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Secciones y Tolerancias</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="ps-4">ID</th>
+                                <th scope="col">Nombre de la Sección</th>
+                                <th scope="col">Tolerancia Actual (%)</th>
+                                <th scope="col" style="min-width: 280px;">Nueva Tolerancia (%)</th>
+                                <th scope="col" class="text-end pe-4">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for seccion_item in secciones %}
+                            <tr id="seccion-row-{{ seccion_item.id }}">
+                                <td class="ps-4">{{ seccion_item.id }}</td>
+                                <td>
+                                    <span class="fw-bold">{{ seccion_item.seccion }}</span>
+                                </td>
+                                <td>
+                                    <span id="tolerancia-actual-{{ seccion_item.id }}">{{ "%.2f"|format(seccion_item.tolerancia * 100) }}</span>%
+                                </td>
+                                <td>
+                                    <form class="update-tolerancia-form" data-seccion-id="{{ seccion_item.id }}">
+                                        {# Campo oculto para enviar el ID de la sección #}
+                                        <input type="hidden" name="id" value="{{ seccion_item.id }}">
+                                        <div class="input-group">
+                                            <input type="number" name="tolerancia" step="0.01" min="0" max="100" 
+                                                class="form-control form-control-sm" 
+                                                placeholder="Ej. 50 para 50%" 
+                                                aria-label="Nueva tolerancia en porcentaje"
+                                                   value="{{ "%.2f"|format(seccion_item.tolerancia * 100) }}">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </form>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button type="submit" form="form-{{ seccion_item.id }}" 
+                                            class="btn btn-primary btn-sm px-3 update-button"
+                                            data-form-id="form-{{ seccion_item.id }}">
+                                        <i class="fas fa-sync-alt me-1"></i> Actualizar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                No hay secciones de tolerancia registradas para ajustar.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    console.log("Script de Ajuste_Tolerancia.html cargado.");
+
+    const forms = document.querySelectorAll('.update-tolerancia-form');
+    const globalMessageArea = document.getElementById('global-message-area');
+
+    // Función para mostrar mensajes globales
+    function showGlobalMessage(message, type = 'success') {
+        globalMessageArea.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                                        ${message}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>`;
+        // Auto-cerrar el mensaje después de 5 segundos
+        setTimeout(() => {
+            const alert = globalMessageArea.querySelector('.alert');
+            if (alert) {
+                new bootstrap.Alert(alert).close();
+            }
+        }, 5000);
+    }
+
+    // Manejar el clic en los botones de actualizar, ya que el form está dentro del TD
+    // y el botón fuera, o podemos hacer que el botón sea tipo submit del form.
+    // Simplificación: El botón de actualizar ahora está asociado al formulario por data-form-id
+    // y el event listener se pondrá en los botones.
+
+    const updateButtons = document.querySelectorAll('.update-button');
+
+    updateButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevenir envío tradicional si el botón fuera type=submit de un form que no es el que queremos
+            
+            const formId = this.dataset.formId; // No usado directamente si el form es el padre
+            const form = this.closest('tr').querySelector('.update-tolerancia-form'); // Encontrar el form en la misma fila
+
+            if (!form) {
+                console.error("No se pudo encontrar el formulario asociado al botón.");
+                showGlobalMessage("Error interno: no se pudo encontrar el formulario.", "danger");
+                return;
+            }
+
+            const seccionId = form.dataset.seccionId;
+            const formData = new FormData(form); // Recoge los datos del formulario (incluido el input oculto 'id')
+            
+            // El valor de tolerancia del input está en porcentaje, hay que convertirlo a fracción para el backend
+            const toleranciaInput = form.querySelector('input[name="tolerancia"]');
+            let toleranciaPorcentaje = parseFloat(toleranciaInput.value);
+
+            if (isNaN(toleranciaPorcentaje) || toleranciaPorcentaje < 0 || toleranciaPorcentaje > 100) {
+                showGlobalMessage("Por favor, ingresa un valor de tolerancia válido entre 0 y 100.", "warning");
+                toleranciaInput.focus();
+                return;
+            }
+            
+            // Convertir a fracción para enviar al backend (ej. 50% -> 0.5)
+            formData.set('tolerancia', (toleranciaPorcentaje / 100).toFixed(4)); // Enviar como fracción
+
+            const originalButtonText = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Actualizando...';
+
+            fetch("{{ url_for('tolerancia.update_tolerancia') }}", {
+                method: 'POST',
+                body: formData // FormData se encarga de los headers correctos para 'multipart/form-data' o 'application/x-www-form-urlencoded'
+                // No necesitas 'Content-Type': 'application/json' si usas FormData
+            })
+            .then(response => {
+                // Verificar si la respuesta es OK y el contenido es JSON
+                if (!response.ok) {
+                    // Si no es OK, intentar parsear como JSON para obtener el mensaje de error del backend
+                    return response.json().then(errData => {
+                        throw new Error(errData.message || `Error del servidor: ${response.status}`);
+                    }).catch(() => {
+                        // Si no se puede parsear como JSON, lanzar error genérico
+                        throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Respuesta del servidor:", data);
+                if (data.status === 'success') {
+                    showGlobalMessage(data.message, 'success');
+                    // Actualizar la UI con la nueva tolerancia
+                    const toleranciaActualSpan = document.getElementById(`tolerancia-actual-${seccionId}`);
+                    if (toleranciaActualSpan) {
+                        // La tolerancia devuelta por el backend ya es una fracción
+                        toleranciaActualSpan.textContent = (data.nueva_tolerancia * 100).toFixed(2);
+                    }
+                } else {
+                    showGlobalMessage(data.message || 'Ocurrió un error desconocido.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error en la petición fetch:', error);
+                showGlobalMessage('Error de conexión o al procesar la solicitud: ' + error.message, 'danger');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = originalButtonText;
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
