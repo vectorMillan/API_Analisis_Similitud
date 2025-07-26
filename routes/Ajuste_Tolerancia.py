@@ -53,21 +53,16 @@ def update_tolerancia():
 
             if not seccion_obj:
                 return jsonify({'status': 'error', 'message': 'Sección no encontrada.'}), 404
-            
-            # El nombre de la sección no se actualiza desde este formulario, solo la tolerancia.
-            # seccion_obj.seccion = request.form['seccion'] # Comentado o eliminado si no se actualiza desde aquí
 
             tolerancia_float = float(nueva_tolerancia_str) # Convertir a float
             
-            # Validación básica (puedes añadir más)
-            if not (0.0 <= tolerancia_float <= 1.0): # Asumiendo que la tolerancia es una fracción (0 a 1)
+            if not (0.0 <= tolerancia_float <= 1.0): 
                 return jsonify({'status': 'error', 'message': 'El valor de tolerancia debe estar entre 0.0 y 1.0.'}), 400
 
 
             seccion_obj.tolerancia = tolerancia_float
             db.session.commit()
 
-            # flash('Sección actualizada correctamente', 'success') # Flash es menos útil con AJAX
             return jsonify({
                 'status': 'success', 
                 'message': 'Sección actualizada correctamente.',
@@ -83,5 +78,4 @@ def update_tolerancia():
             current_app.logger.error(f"Error al actualizar tolerancia: {str(e)}") # Loguear el error
             return jsonify({'status': 'error', 'message': f'Error al actualizar: {str(e)}'}), 500
     
-    # Si no es POST, aunque la ruta está definida solo para POST, es bueno tener un fallback.
     return jsonify({'status': 'error', 'message': 'Método no permitido.'}), 405

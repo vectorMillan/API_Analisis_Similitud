@@ -6,7 +6,7 @@ from itertools import combinations
 import time # Para la temporización
 
 # Importaciones de Scikit-learn
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # Modelos y DB
@@ -54,7 +54,8 @@ def obtener_tolerancias():
         return None
 
 # --- Función para insertar o actualizar comparación ---
-def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id, similitudes_dict, secciones_similares_count):
+def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id, 
+                                    similitudes_dict, secciones_similares_count):
     try:
         u1_id = int(usuario_1_id)
         u2_id = int(usuario_2_id)
@@ -93,7 +94,7 @@ def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id, si
             registro_existente.similitud_detectada = similitud_detectada_flag
             registro_existente.status_analisis = 1
             registro_existente.updated_at = datetime.utcnow()
-            # db.session.add(registro_existente) # No es estrictamente necesario para objetos ya en sesión
+            # db.session.add(registro_existente)
             print(f"Actualizada la comparación (Usuarios: {u1_id}, {u2_id}; Proyecto: {proj_id}).")
         else:
             nuevo_registro = ComparacionSimilitud(
@@ -172,7 +173,8 @@ def analizar_proyecto(project_id_param, tolerancias): # Pasamos tolerancias como
             similitud_actual = 0.0
             if texto1 and texto2: 
                 try:
-                    vectorizador = TfidfVectorizer()
+                    # vectorizador = TfidfVectorizer()
+                    vectorizador = CountVectorizer(ngram_range=(1, 1), token_pattern=r'\b\w+\b') # Usar CountVectorizer para n-gramas
                     vectores = vectorizador.fit_transform([texto1, texto2])
                     if vectores.shape[1] > 0:
                         similitud_actual = cosine_similarity(vectores[0:1], vectores[1:2])[0][0]
@@ -215,9 +217,6 @@ def analizar_todos_los_proyectos_service():
         return {"estado": "error", "mensaje": msg, "proyectos_analizados": 0, "tiempo_total": 0}
 
     try:
-        # Obtener todos los IDs de proyectos únicos desde la tabla de reportes finales
-        # Esto asume que si un proyecto existe, tiene al menos un reporte final.
-        # Si tienes una tabla 'Project' separada, sería mejor obtener los IDs de ahí.
         query_proyectos = db.session.query(distinct(ReportesFinales.project_id)).all()
         project_ids = [pid[0] for pid in query_proyectos if pid[0] is not None]
         
@@ -267,4 +266,6 @@ def analizar_todos_los_proyectos_service():
         # current_app.logger.error(error_msg)
         import traceback
         traceback.print_exc() # Para log detallado del error en el servidor
-        return {"estado": "error", "mensaje": error_msg, "proyectos_analizados": proyectos_procesados_count if 'proyectos_procesados_count' in locals() else 0, "tiempo_total": 0}
+        return {"estado": "error", "mensaje": error_msg, 
+                "proyectos_analizados": proyectos_procesados_count if 'proyectos_procesados_count' in locals() else 0, 
+                "tiempo_total": 0}

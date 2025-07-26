@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, jsonify, current_app, url_for, flash
+from flask import Blueprint, render_template, request, redirect, jsonify, current_app, url_for, flash, Response
 from config.config import db
 from models.BotonTematica import Tematicas # Asumo que este modelo existe y se llama así
 from models.Tolerancia_Porcentajes import ToleranciasPorcentajes
-from models.Reportes_Finales import ReportesFinales # Importar para la ruta de análisis individual
+from models.Reportes_Finales import ReportesFinales  #Importar para la ruta de análisis individual
 from models.Comparacion_Similitud import ComparacionSimilitud # Para verificar estados si es necesario
 # Importar los servicios de análisis NLP
 from services.Procesamiento_Similitud import (
@@ -15,26 +15,20 @@ from services.Procesamiento_Semantico import ( # Importar el nuevo servicio SEM�
     analizar_proyecto_semantico as analizar_proyecto_semantico_individual_service,
     obtener_tolerancias_semantico
 )
+from services.Procesamiento_Completo import realizar_analisis_completo_sse
 from sqlalchemy import text
 import math
+from services.Procesamiento_Filtro import filtrar_y_guardar_reportes_service
 
 analisis = Blueprint('analisis', __name__)
 
 @analisis.route('/')
 def index():
-    """
-    Página principal del módulo de análisis, podría redirigir o mostrar una vista general.
-    Actualmente muestra la lista de temáticas, que es el comportamiento de /analisis-similitud.
-    """
     # Redirigir a la vista principal de análisis de similitud o cargarla directamente
     return redirect(url_for('analisis.mostrar_tematicas_base'))
 
-@analisis.route('/analisis-similitud') # Cambiado para evitar conflicto con la ruta parametrizada
+@analisis.route('/analisis-similitud') 
 def mostrar_tematicas_base():
-    """
-    Muestra la página de Análisis de Similitud con la lista de temáticas,
-    sin proyectos seleccionados inicialmente.
-    """
     tematicas_activas = Tematicas.query.filter_by(status=1).all()
     return render_template('AnalisisSimilitud.html', 
                         tematicas=tematicas_activas, 
@@ -290,4 +284,40 @@ def iniciar_analisis_individual_sintactico_route(proyecto_id):
         flash(f"Error al procesar el análisis del proyecto {proyecto_id}. Detalles: {str(e)}", "danger")
         return redirect(request.referrer or url_for('analisis.mostrar_tematicas_base'))
 
-
+# --- NUEVA RUTA PARA FILTRAR REPORTES ---
+@analisis.route('/filtrar-reportes', methods=['POST'])
+def filtrar_reportes_route():
+    """
+    Endpoint de la API para iniciar el proceso de filtrado de reportes.
+    """
+    current_app.logger.info("Solicitud POST recibida en /filtrar-reportes")
+    try:
+        # Llama a la función de servicio que hace el trabajo pesado
+        resultado = filtrar_y_guardar_reportes_service()
+        
+        if resultado.get("status") == "error":
+            # Si el servicio reportó un error, devolverlo con un código de error del servidor
+            return jsonify(resultado), 500
+        
+        # Si todo fue bien, devolver el resultado con un código de éxito
+        return jsonify(resultado), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Excepción no controlada en filtrar_reportes_route: {str(e)}", exc_info=True)
+        return jsonify({"status": "error", "message": "Error inesperado en el servidor al procesar la solicitud de filtrado."}), 500
+    
+@analisis.route('/iniciar-analisis-completo-stream')
+def analisis_completo_stream():
+    """
+    Endpoint que transmite el progreso del análisis completo (sintáctico, semántico y filtro)
+    usando Server-Sent Events.
+    """
+    current_app.logger.info("Cliente conectado a /iniciar-analisis-completo-stream")
+    
+    # 1. Obtener la instancia de la aplicación actual DENTRO de la ruta
+    #    donde el contexto de la aplicación está activo.
+    app_instance = current_app._get_current_object()
+    
+    # 2. Pasar la instancia de la aplicación al generador.
+    #    Esta es la línea que soluciona el TypeError.
+    return Response(realizar_analisis_completo_sse(app_instance), mimetype='text/event-stream')

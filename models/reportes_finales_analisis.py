@@ -1,8 +1,8 @@
 from config.config import db
 from datetime import datetime
 
-class ReportesFinales(db.Model):
-    __tablename__ = 'reportes_finales'
+class ReportesFinalesAnalisis(db.Model):
+    __tablename__ = 'reportes_finales_analisis'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, nullable=False)

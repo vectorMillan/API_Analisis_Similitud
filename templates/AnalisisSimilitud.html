@@ -7,10 +7,9 @@
             <div class="d-flex justify-content-between align-items-center"> {# Flex para alinear título y botón #}
                 <h2>Análisis de Similitud por Temática</h2>
                 <div> {# Contenedor para los botones de análisis global #}
-                    <button id="btnAnalizarTodosSemantico" class="btn btn-warning me-2"> {# ID y texto actualizados #}
+                    <button id="btnAnalizar" class="btn btn-primary"> {# ID y texto actualizados #}
                         <i class="fas fa-cogs"></i> Iniciar Análisis de Similitud
-                    </button>
-                    
+                    </button>                  
                 </div>
             </div>
         </div>
@@ -18,19 +17,15 @@
         <div class="col-md-12 mb-4" id="areaProgreso" style="display: none;">
             <div class="card">
                 <div class="card-header bg-info text-white">
-                    <h4 id="tituloHeaderProgreso">Progreso de Análisis Global</h4>
+                    <h4 id="tituloHeaderProgreso">Progreso del Análisis Completo</h4>
                 </div>
                 <div class="card-body">
                     <div class="progress mb-3" style="height: 25px;">
                         <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                     </div>
-                    <p id="statusMessage">Preparando análisis...</p>
-                    <p id="currentProjectMessage" class="text-muted" style="min-height: 1.5em;"></p>
-                    <div id="resultadoFinal" class="alert" style="display: none;">
-                        <h5 id="tituloResultadoFinal">Análisis completado</h5>
-                        <p id="mensajeResultadoFinal"></p>
-                        <p>Total proyectos procesados: <span id="totalProyectosAnalizados">0</span> / <span id="totalProyectosGlobal">N/A</span></p>
-                        <p>Tiempo total: <span id="tiempoTotal">0s</span></p>
+                    <p id="statusMessage" class="fw-bold">Esperando inicio del análisis...</p>
+                    <div id="log-area" class="mt-2 p-2 bg-light border rounded" style="font-family: monospace; font-size: 0.8em; max-height: 150px; overflow-y: auto;">
+                        <!-- Los mensajes de progreso se añadirán aquí -->
                     </div>
                 </div>
             </div>
@@ -155,217 +150,107 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("Paso 1: DOM completamente cargado y parseado.");
-
-    // Elementos comunes de la UI de progreso
+    const btnAnalizar = document.getElementById('btnAnalizar');
     const areaProgreso = document.getElementById('areaProgreso');
-    console.log("Elemento 'areaProgreso':", areaProgreso);
-
     const progressBar = document.getElementById('progressBar');
-    console.log("Elemento 'progressBar':", progressBar);
-
     const statusMessage = document.getElementById('statusMessage');
-    console.log("Elemento 'statusMessage':", statusMessage);
+    const logArea = document.getElementById('log-area');
 
-    const currentProjectMessageEl = document.getElementById('currentProjectMessage');
-    console.log("Elemento 'currentProjectMessage':", currentProjectMessageEl);
+    let eventSource = null;
 
-    const resultadoFinalDiv = document.getElementById('resultadoFinal');
-    console.log("Elemento 'resultadoFinalDiv':", resultadoFinalDiv);
-
-    const tituloHeaderProgreso = document.getElementById('tituloHeaderProgreso');
-    console.log("Elemento 'tituloHeaderProgreso':", tituloHeaderProgreso); // Log clave para el error
-
-    const tituloResultadoFinal = document.getElementById('tituloResultadoFinal');
-    console.log("Elemento 'tituloResultadoFinal':", tituloResultadoFinal);
-
-    const mensajeResultadoFinal = document.getElementById('mensajeResultadoFinal');
-    console.log("Elemento 'mensajeResultadoFinal':", mensajeResultadoFinal);
-
-    const totalProyectosAnalizadosSpan = document.getElementById('totalProyectosAnalizados');
-    console.log("Elemento 'totalProyectosAnalizados':", totalProyectosAnalizadosSpan);
-
-    const totalProyectosGlobalSpan = document.getElementById('totalProyectosGlobal');
-    console.log("Elemento 'totalProyectosGlobal':", totalProyectosGlobalSpan);
-
-    const tiempoTotalSpan = document.getElementById('tiempoTotal');
-    console.log("Elemento 'tiempoTotal':", tiempoTotalSpan);
-
-    // Referencias a los botones
-    const btnSintactico = document.getElementById('btnAnalizarTodosSintactico');
-    console.log("Botón 'btnAnalizarTodosSintactico':", btnSintactico);
-
-    const btnSemantico = document.getElementById('btnAnalizarTodosSemantico');
-    console.log("Botón 'btnAnalizarTodosSemantico':", btnSemantico);
-
-    console.log("Paso 2: Variables de elementos del DOM obtenidas (ver logs arriba).");
-
-    function iniciarAnalisisGlobalFetch(tipoAnalisis, fetchUrl, botonPresionado) {
-        console.log(`Paso 4 (${tipoAnalisis}): Entrando a iniciarAnalisisGlobalFetch. URL: ${fetchUrl}`);
-        
-        // Verificar si los elementos críticos son null ANTES de usarlos
-        if (!areaProgreso || !progressBar || !statusMessage || !resultadoFinalDiv || !tituloHeaderProgreso || !currentProjectMessageEl || !tituloResultadoFinal || !mensajeResultadoFinal || !totalProyectosAnalizadosSpan || !totalProyectosGlobalSpan || !tiempoTotalSpan ) {
-            console.error("ERROR CRÍTICO: Uno o más elementos de la UI de progreso no fueron encontrados en el DOM. Abortando análisis en el frontend.");
-            alert("Error: No se pueden mostrar los elementos de progreso. Revisa la consola (F12).");
-            // Habilitar botones para que el usuario pueda reintentar si el problema es temporal
-            if(btnSintactico) btnSintactico.disabled = false;
-            if(btnSemantico) btnSemantico.disabled = false;
-            if(botonPresionado && btnSintactico && btnSemantico) { // Restaurar texto original del botón presionado
-                if(botonPresionado.id === 'btnAnalizarTodosSintactico') botonPresionado.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Sintáctico';
-                if(botonPresionado.id === 'btnAnalizarTodosSemantico') botonPresionado.innerHTML = '<i class="fas fa-brain"></i> Iniciar Análisis Semántico';
-            }
-            return;
+    function addLogMessage(message, type = 'info') {
+        const p = document.createElement('p');
+        p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        if (type === 'error') {
+            p.style.color = 'red';
+        } else if (type === 'success') {
+            p.style.color = 'green';
         }
-
-
-        if (!confirm(`¿Estás seguro de que deseas iniciar el análisis ${tipoAnalisis.toLowerCase()} para TODOS los proyectos? Esta acción puede tardar y consumir recursos.`)) {
-            console.log(`Paso 4.1 (${tipoAnalisis}): Análisis cancelado por el usuario.`);
-            return;
-        }
-        console.log(`Paso 4.2 (${tipoAnalisis}): Usuario confirmó. Preparando UI de progreso.`);
-
-        areaProgreso.style.display = 'block';
-        resultadoFinalDiv.style.display = 'none';
-        progressBar.style.width = '0%';
-        progressBar.textContent = '0%';
-        progressBar.classList.remove('bg-success', 'bg-danger', 'bg-warning');
-        progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
-        
-        // Esta es la línea que causaba el error (1:363 en el log original)
-        tituloHeaderProgreso.textContent = `Progreso de Análisis ${tipoAnalisis}`; 
-        
-        statusMessage.textContent = `Iniciando análisis ${tipoAnalisis.toLowerCase()} global... Esto puede tardar varios minutos.`;
-        currentProjectMessageEl.textContent = ''; 
-        
-        if(btnSintactico) btnSintactico.disabled = true;
-        if(btnSemantico) btnSemantico.disabled = true;
-        
-        botonPresionado.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analizando...';
-
-        console.log(`Paso 5 (${tipoAnalisis}): Iniciando fetch a ${fetchUrl}`);
-
-        fetch(fetchUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => {
-            console.log(`Paso 6 (${tipoAnalisis}): Respuesta inicial del servidor recibida. Status: ${response.status}`);
-            const responseStatus = response.status;
-            return response.json().then(data => ({ status: responseStatus, body: data }))
-                .catch(jsonError => {
-                    console.error(`Paso 6.1 (${tipoAnalisis}): Error al parsear JSON. Status: ${responseStatus}`, jsonError);
-                    return response.text().then(textData => ({ 
-                        status: responseStatus, 
-                        body: { 
-                            estado: "error_parseo_o_no_json", 
-                            mensaje: `Respuesta del servidor no es JSON válido (Status: ${responseStatus}). Contenido: ${textData || 'Vacío'}`
-                        }
-                    }));
-                });
-        })
-        .then(dataObj => {
-            const data = dataObj.body;
-            const httpStatus = dataObj.status;
-            console.log(`Paso 7 (${tipoAnalisis}): Datos procesados:`, data);
-
-            progressBar.classList.remove('progress-bar-animated');
-            resultadoFinalDiv.classList.remove('alert-success', 'alert-danger', 'alert-warning', 'alert-info');
-
-            if (data.estado === 'completado' && httpStatus === 200) {
-                progressBar.style.width = '100%';
-                progressBar.textContent = '100% Completado';
-                progressBar.classList.add('bg-success');
-                tituloResultadoFinal.textContent = `Análisis ${tipoAnalisis} Completado`;
-                resultadoFinalDiv.classList.add('alert-success');
-            } else { 
-                progressBar.style.width = '100%';
-                progressBar.textContent = 'Error';
-                progressBar.classList.add('bg-danger');
-                tituloResultadoFinal.textContent = `Error en Análisis ${tipoAnalisis}`;
-                resultadoFinalDiv.classList.add('alert-danger');
-            }
-            
-            mensajeResultadoFinal.textContent = data.mensaje || (httpStatus === 200 ? 'Proceso finalizado.' : `Ocurrió un error (HTTP ${httpStatus}).`);
-            totalProyectosAnalizadosSpan.textContent = data.proyectos_analizados !== undefined ? data.proyectos_analizados : 'N/A';
-            totalProyectosGlobalSpan.textContent = data.total_proyectos !== undefined ? data.total_proyectos : 'N/A';
-            tiempoTotalSpan.textContent = data.tiempo_total_formateado || (data.tiempo_total_segundos ? `${data.tiempo_total_segundos.toFixed(2)}s` : 'N/A');
-            statusMessage.textContent = data.mensaje || "Proceso finalizado."; 
-            resultadoFinalDiv.style.display = 'block';
-        })
-        .catch(error => {
-            console.error(`Paso 8 (${tipoAnalisis}): Error general en la petición:`, error);
-            statusMessage.textContent = `Error de red o configuración (${tipoAnalisis.toLowerCase()}): ${error.message}.`;
-            progressBar.style.width = '100%';
-            progressBar.textContent = 'Error';
-            progressBar.classList.remove('progress-bar-animated');
-            progressBar.classList.add('bg-danger');
-
-            resultadoFinalDiv.classList.remove('alert-success', 'alert-warning', 'alert-info');
-            resultadoFinalDiv.classList.add('alert-danger');
-            tituloResultadoFinal.textContent = `Error Crítico de Comunicación (${tipoAnalisis})`;
-            mensajeResultadoFinal.textContent = `Fallo la comunicación con el servidor: ${error.message}`;
-            totalProyectosAnalizadosSpan.textContent = '0';
-            tiempoTotalSpan.textContent = '0s';
-            resultadoFinalDiv.style.display = 'block';
-        })
-        .finally(() => {
-            console.log(`Paso 9 (${tipoAnalisis}): Bloque finally ejecutado.`);
-            habilitarBotonesAnalisis();
-        });
+        logArea.appendChild(p);
+        logArea.scrollTop = logArea.scrollHeight; // Auto-scroll al último mensaje
     }
 
-    function habilitarBotonesAnalisis() {
-        if(btnSintactico) {
-            btnSintactico.disabled = false;
-            btnSintactico.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Sintáctico';
-        }
-        if(btnSemantico) {
-            btnSemantico.disabled = false;
-            btnSemantico.innerHTML = '<i class="fas fa-brain"></i> Iniciar Análisis Semántico';
-        }
-        console.log("Paso 10: Botones de análisis habilitados.");
-    }
-
-    if (btnSintactico) {
-        console.log("Paso 3.1: Botón 'btnAnalizarTodosSintactico' encontrado. Añadiendo listener.");
-        btnSintactico.addEventListener('click', function() {
-            // alert("Botón Sintáctico Clickeado! Revisa la consola para los siguientes pasos."); // ALERTA INMEDIATA (opcional para depuración)
-            console.log("Paso 3.1.1: Botón 'btnAnalizarTodosSintactico' clickeado.");
-            iniciarAnalisisGlobalFetch(
-                "Sintáctico", 
-                "{{ url_for('analisis.iniciar_analisis_global_sintactico_route') }}", 
-                this
-            );
-        });
-    } else {
-        console.error("ERROR: Botón 'btnAnalizarTodosSintactico' NO encontrado. Verifica el ID del botón en el HTML.");
-    }
-
-    if (btnSemantico) {
-        console.log("Paso 3.2: Botón 'btnAnalizarTodosSemantico' encontrado. Añadiendo listener.");
-        btnSemantico.addEventListener('click', function() {
-            // alert("Botón Semántico Clickeado! Revisa la consola para los siguientes pasos."); // ALERTA INMEDIATA (opcional para depuración)
-            console.log("Paso 3.2.1: Botón 'btnAnalizarTodosSemantico' clickeado.");
-            let urlSemantico;
-            try {
-                urlSemantico = "{{ url_for('analisis.iniciar_analisis_global_semantico_route') }}"; 
-                console.log("URL para análisis semántico: " + urlSemantico);
-            } catch(e) {
-                alert("Error: La ruta para el análisis semántico no está definida correctamente en el backend. Contacta al administrador.");
-                console.error("Error al generar url_for para la ruta semántica:", e);
-                habilitarBotonesAnalisis(); 
+    if (btnAnalizar) {
+        btnAnalizar.addEventListener('click', function() {
+            if (!confirm('¿Estás seguro de que deseas iniciar el análisis completo (Sintáctico, Semántico y Filtro)? Este proceso puede tardar mucho tiempo.')) {
                 return;
             }
-            iniciarAnalisisGlobalFetch(
-                "Semántico", 
-                urlSemantico, 
-                this 
-            );
+
+            // Resetear UI
+            areaProgreso.style.display = 'block';
+            logArea.innerHTML = ''; // Limpiar logs
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            progressBar.classList.remove('bg-success', 'bg-danger');
+            progressBar.classList.add('progress-bar-animated');
+            statusMessage.textContent = 'Conectando al servidor...';
+            addLogMessage('Conectando al servidor...');
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analizando...';
+
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            const sseUrl = "{{ url_for('analisis.analisis_completo_stream') }}";
+            eventSource = new EventSource(sseUrl);
+
+            eventSource.onopen = function(event) {
+                console.log("SSE: Conexión establecida para análisis completo.");
+                addLogMessage('Conexión establecida.');
+            };
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log("SSE: Mensaje recibido:", data);
+
+                // Actualizar barra de progreso
+                const porcentaje = (data.paso_actual / data.total_pasos) * 100;
+                progressBar.style.width = porcentaje.toFixed(2) + '%';
+                progressBar.textContent = porcentaje.toFixed(0) + '%';
+
+                // Actualizar mensaje de estado principal
+                statusMessage.textContent = data.mensaje;
+                
+                // Añadir al log
+                if (data.estado === 'paso_completado') {
+                    addLogMessage(data.mensaje, 'success');
+                } else {
+                    addLogMessage(data.mensaje, 'info');
+                }
+
+                // Manejar estado final
+                if (data.estado === 'finalizado') {
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.classList.add('bg-success');
+                    addLogMessage('¡Proceso finalizado!', 'success');
+                    eventSource.close();
+                    btnAnalizar.disabled = false;
+                    btnAnalizar.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Completo';
+                    // Opcional: recargar la página para ver los cambios en la tabla
+                    setTimeout(() => { window.location.reload(); }, 3000);
+                } else if (data.estado === 'error_fatal') {
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.classList.add('bg-danger');
+                    addLogMessage(data.mensaje, 'error');
+                    eventSource.close();
+                    btnAnalizar.disabled = false;
+                    btnAnalizar.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Completo';
+                }
+            };
+
+            eventSource.onerror = function(event) {
+                console.error("SSE: Error de conexión.", event);
+                const errorMessage = "Error de conexión con el servidor. El proceso fue interrumpido.";
+                statusMessage.textContent = errorMessage;
+                addLogMessage(errorMessage, 'error');
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.classList.add('bg-danger');
+                if (eventSource) eventSource.close();
+                btnAnalizar.disabled = false;
+                btnAnalizar.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Completo';
+            };
         });
-    } else {
-        console.error("ERROR: Botón 'btnAnalizarTodosSemantico' NO encontrado. Verifica el ID del botón en el HTML.");
     }
 });
 </script>

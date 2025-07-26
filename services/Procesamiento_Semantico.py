@@ -122,7 +122,6 @@ def insertar_o_actualizar_comparacion_semantica(usuario_1_id, usuario_2_id, proj
         traceback.print_exc()
 
 def analizar_proyecto_semantico(project_id_param, tolerancias_externas=None):
-
     if not model_sentence_transformer:
         error_msg = "Error crítico (Semántico): El modelo SentenceTransformer no está cargado. Abortando análisis."
         print(error_msg)
@@ -237,11 +236,6 @@ def analizar_proyecto_semantico(project_id_param, tolerancias_externas=None):
 
 # --- Nueva función para analizar todos los proyectos semánticamente (versión no-SSE) ---
 def analizar_todos_los_proyectos_semantico_service():
-    """
-    Analiza semánticamente todos los proyectos que tienen reportes finales.
-    Retorna estadísticas del análisis. (Versión no-SSE)
-    """
-    # from flask import current_app # Para logging
 
     print("Iniciando el análisis SEMÁNTICO de todos los proyectos...")
     # current_app.logger.info("Iniciando el análisis SEMÁNTICO de todos los proyectos...")
@@ -268,7 +262,6 @@ def analizar_todos_los_proyectos_semantico_service():
             return {"estado": "completado_sin_proyectos", "mensaje": msg, "proyectos_analizados": 0, "total_proyectos":0, "tiempo_total_segundos": 0, "tiempo_total_formateado": "0s"}
 
         print(f"Se encontraron {total_proyectos_encontrados} proyectos únicos con reportes para el análisis SEMÁNTICO.")
-        # current_app.logger.info(f"Se encontraron {total_proyectos_encontrados} proyectos para análisis SEMÁNTICO.")
             
         tiempo_inicio_total = time.time()
         proyectos_procesados_con_exito = 0
