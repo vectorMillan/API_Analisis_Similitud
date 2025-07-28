@@ -6,7 +6,6 @@
         <div class="col-md-12 mb-4">
             <div class="d-flex justify-content-between align-items-center"> {# Flex para alinear título y botón #}
                 <h2>Análisis de Similitud por Temática</h2>
-                <h2>Este mensaje solo se debe mostrar en la rama "vector-ngrama"</h2>
                 <div> {# Contenedor para los botones de análisis global #}
                     <button id="btnAnalizar" class="btn btn-primary"> {# ID y texto actualizados #}
                         <i class="fas fa-cogs"></i> Iniciar Análisis de Similitud
@@ -91,7 +90,7 @@
                                             </a>
                                             {% if proyecto.analizado == '❌' %}
                                             {# Formulario para el botón de análisis individual #}
-                                            <form action="{{ url_for('analisis.iniciar_analisis_individual_route', proyecto_id=proyecto.id) }}" method="POST" style="display: inline-block;" 
+                                            <form action="{{ url_for('analisis.iniciar_analisis_individual_sintactico_route', proyecto_id=proyecto.id) }}" method="POST" style="display: inline-block;" 
                                                     onsubmit="return confirm('¿Estás seguro de que deseas iniciar el análisis para este proyecto? Puede tardar unos momentos.');">
                                                 {# Podrías añadir un token CSRF aquí si lo usas: <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/> #}
                                                 <button type="submit" class="btn btn-sm btn-warning mb-1" title="Analizar este proyecto">
