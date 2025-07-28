@@ -14,7 +14,7 @@
             </div>
         </div>
 
-        <div class="col-md-12 mb-4" id="areaProgreso" style="display: none;">
+        <div class="col-md-12 mb-4" id="areaProgreso">
             <div class="card">
                 <div class="card-header bg-info text-white">
                     <h4 id="tituloHeaderProgreso">Progreso del Análisis Completo</h4>
@@ -26,6 +26,12 @@
                     <p id="statusMessage" class="fw-bold">Esperando inicio del análisis...</p>
                     <div id="log-area" class="mt-2 p-2 bg-light border rounded" style="font-family: monospace; font-size: 0.8em; max-height: 150px; overflow-y: auto;">
                         <!-- Los mensajes de progreso se añadirán aquí -->
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button id="btnClearStatus" class="btn btn-sm btn-outline-secondary" style="display: none;">
+                            <i class="fas fa-times"></i> Descartar Resultado
+                        </button>
                     </div>
                 </div>
             </div>
@@ -150,43 +156,106 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // --- ELEMENTOS DEL DOM ---
     const btnAnalizar = document.getElementById('btnAnalizar');
     const areaProgreso = document.getElementById('areaProgreso');
     const progressBar = document.getElementById('progressBar');
     const statusMessage = document.getElementById('statusMessage');
     const logArea = document.getElementById('log-area');
-
+    const btnClearStatus = document.getElementById('btnClearStatus');
+    
     let eventSource = null;
+    const ANALYSIS_STATE_KEY = 'analisisCompletoState'; // Clave para localStorage
 
+    // --- FUNCIONES AUXILIARES DE UI ---
     function addLogMessage(message, type = 'info') {
         const p = document.createElement('p');
         p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-        if (type === 'error') {
-            p.style.color = 'red';
-        } else if (type === 'success') {
-            p.style.color = 'green';
-        }
+        if (type === 'error') p.style.color = 'red';
+        if (type === 'success') p.style.color = 'green';
         logArea.appendChild(p);
-        logArea.scrollTop = logArea.scrollHeight; // Auto-scroll al último mensaje
+        logArea.scrollTop = logArea.scrollHeight;
     }
 
+    function resetUI() {
+        areaProgreso.style.display = 'none';
+        btnClearStatus.style.display = 'none';
+        logArea.innerHTML = '';
+        progressBar.style.width = '0%';
+        progressBar.textContent = '0%';
+        progressBar.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'progress-bar-animated', 'progress-bar-striped');
+        btnAnalizar.disabled = false;
+        btnAnalizar.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Completo';
+    }
+
+    function displayFinalState(state) {
+        areaProgreso.style.display = 'block';
+        btnClearStatus.style.display = 'block';
+        statusMessage.textContent = state.message;
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+        progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+
+        if (state.status === 'finalizado') {
+            progressBar.classList.add('bg-success');
+            addLogMessage(state.message, 'success');
+        } else { // 'error_fatal'
+            progressBar.classList.add('bg-danger');
+            addLogMessage(state.message, 'error');
+        }
+    }
+
+    function displayInterruptedState() {
+        areaProgreso.style.display = 'block';
+        btnClearStatus.style.display = 'block';
+        statusMessage.textContent = "El análisis estaba en progreso, pero la conexión se perdió.";
+        addLogMessage("El proceso puede continuar en el servidor. Revisa los resultados más tarde.", "info");
+        progressBar.style.width = '100%';
+        progressBar.textContent = 'Desconectado';
+        progressBar.classList.add('bg-warning');
+    }
+
+    // --- LÓGICA PRINCIPAL ---
+
+    // 1. RESTAURAR ESTADO AL CARGAR LA PÁGINA
+    const savedStateJSON = localStorage.getItem(ANALYSIS_STATE_KEY);
+    if (savedStateJSON) {
+        const savedState = JSON.parse(savedStateJSON);
+        if (savedState.status === 'finalizado' || savedState.status === 'error_fatal') {
+            console.log("Restaurando estado final desde localStorage.");
+            displayFinalState(savedState);
+        } else if (savedState.status === 'running') {
+            console.log("Detectando estado de análisis en ejecución interrumpido.");
+            displayInterruptedState();
+        }
+    } else {
+        resetUI(); // Asegurarse de que esté oculto si no hay estado guardado
+    }
+
+    // 2. EVENT LISTENER PARA EL BOTÓN DE LIMPIAR
+    btnClearStatus.addEventListener('click', function() {
+        localStorage.removeItem(ANALYSIS_STATE_KEY);
+        resetUI();
+    });
+
+    // 3. EVENT LISTENER PARA EL BOTÓN DE INICIAR ANÁLISIS
     if (btnAnalizar) {
         btnAnalizar.addEventListener('click', function() {
-            if (!confirm('¿Estás seguro de que deseas iniciar el análisis completo (Sintáctico, Semántico y Filtro)? Este proceso puede tardar mucho tiempo.')) {
+            if (!confirm('¿Estás seguro de que deseas iniciar el análisis completo?')) {
                 return;
             }
 
-            // Resetear UI
+            // Iniciar UI
+            resetUI(); // Limpiar cualquier estado anterior
             areaProgreso.style.display = 'block';
-            logArea.innerHTML = ''; // Limpiar logs
-            progressBar.style.width = '0%';
-            progressBar.textContent = '0%';
-            progressBar.classList.remove('bg-success', 'bg-danger');
-            progressBar.classList.add('progress-bar-animated');
+            progressBar.classList.add('progress-bar-animated', 'progress-bar-striped');
             statusMessage.textContent = 'Conectando al servidor...';
             addLogMessage('Conectando al servidor...');
             this.disabled = true;
             this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analizando...';
+
+            // Guardar estado inicial en localStorage
+            localStorage.setItem(ANALYSIS_STATE_KEY, JSON.stringify({ status: 'running' }));
 
             if (eventSource) {
                 eventSource.close();
@@ -195,60 +264,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const sseUrl = "{{ url_for('analisis.analisis_completo_stream') }}";
             eventSource = new EventSource(sseUrl);
 
-            eventSource.onopen = function(event) {
-                console.log("SSE: Conexión establecida para análisis completo.");
-                addLogMessage('Conexión establecida.');
-            };
+            eventSource.onopen = () => addLogMessage('Conexión establecida.');
 
             eventSource.onmessage = function(event) {
                 const data = JSON.parse(event.data);
-                console.log("SSE: Mensaje recibido:", data);
-
-                // Actualizar barra de progreso
+                
                 const porcentaje = (data.paso_actual / data.total_pasos) * 100;
                 progressBar.style.width = porcentaje.toFixed(2) + '%';
                 progressBar.textContent = porcentaje.toFixed(0) + '%';
-
-                // Actualizar mensaje de estado principal
                 statusMessage.textContent = data.mensaje;
                 
-                // Añadir al log
-                if (data.estado === 'paso_completado') {
-                    addLogMessage(data.mensaje, 'success');
-                } else {
-                    addLogMessage(data.mensaje, 'info');
-                }
+                addLogMessage(data.mensaje, data.estado === 'paso_completado' ? 'success' : 'info');
 
-                // Manejar estado final
-                if (data.estado === 'finalizado') {
-                    progressBar.classList.remove('progress-bar-animated');
-                    progressBar.classList.add('bg-success');
-                    addLogMessage('¡Proceso finalizado!', 'success');
+                if (data.estado === 'finalizado' || data.estado === 'error_fatal') {
+                    // Guardar estado final en localStorage
+                    localStorage.setItem(ANALYSIS_STATE_KEY, JSON.stringify(data));
+                    displayFinalState(data); // Actualizar UI al estado final
                     eventSource.close();
-                    btnAnalizar.disabled = false;
-                    btnAnalizar.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Completo';
-                    // Opcional: recargar la página para ver los cambios en la tabla
-                    setTimeout(() => { window.location.reload(); }, 3000);
-                } else if (data.estado === 'error_fatal') {
-                    progressBar.classList.remove('progress-bar-animated');
-                    progressBar.classList.add('bg-danger');
-                    addLogMessage(data.mensaje, 'error');
-                    eventSource.close();
-                    btnAnalizar.disabled = false;
-                    btnAnalizar.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Completo';
+                    // El botón de limpiar ahora se encarga de habilitar el botón principal
                 }
             };
 
             eventSource.onerror = function(event) {
-                console.error("SSE: Error de conexión.", event);
                 const errorMessage = "Error de conexión con el servidor. El proceso fue interrumpido.";
-                statusMessage.textContent = errorMessage;
-                addLogMessage(errorMessage, 'error');
-                progressBar.classList.remove('progress-bar-animated');
-                progressBar.classList.add('bg-danger');
+                const errorState = { status: 'error_fatal', message: errorMessage };
+                localStorage.setItem(ANALYSIS_STATE_KEY, JSON.stringify(errorState));
+                displayFinalState(errorState);
                 if (eventSource) eventSource.close();
-                btnAnalizar.disabled = false;
-                btnAnalizar.innerHTML = '<i class="fas fa-cogs"></i> Iniciar Análisis Completo';
             };
         });
     }
