@@ -6,7 +6,16 @@
         <div class="col-md-12 mb-4">
             <div class="d-flex justify-content-between align-items-center"> {# Flex para alinear título y botón #}
                 <h2>Análisis de Similitud por Temática</h2>
-                <div> {# Contenedor para los botones de análisis global #}
+                <div class="d-flex align-items-center mt-2 mt-md-0"> {# Contenedor para los botones de análisis global #}
+                    <div class="me-2">
+                        <label for="ngramSelect" class="form-label-sm visually-hidden">Tipo de N-grama</label>
+                        <select class="form-select form-select-sm" id="ngramSelect" aria-label="Seleccionar tipo de N-grama">
+                            <option value="1" selected>Unigramas (Palabra por palabra)</option>
+                            <option value="2">Bigramas (Pares de palabras)</option>
+                            <option value="3">Trigramas (Tríos de palabras)</option>
+                            <option value="4">4-gramas</option>
+                        </select>
+                    </div>
                     <button id="btnAnalizar" class="btn btn-primary"> {# ID y texto actualizados #}
                         <i class="fas fa-cogs"></i> Iniciar Análisis de Similitud
                     </button>                  
@@ -158,6 +167,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // --- ELEMENTOS DEL DOM ---
     const btnAnalizar = document.getElementById('btnAnalizar');
+    const ngramSelect = document.getElementById('ngramSelect'); // Obtener el nuevo selector
     const areaProgreso = document.getElementById('areaProgreso');
     const progressBar = document.getElementById('progressBar');
     const statusMessage = document.getElementById('statusMessage');
@@ -245,6 +255,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            const ngramValue = ngramSelect.value;
+            const sseUrl = `{{ url_for('analisis.analisis_completo_stream') }}?ngram=${ngramValue}`;
+            
+            console.log(`Iniciando análisis con n-gramas de tamaño ${ngramValue}. URL de conexión: ${sseUrl}`);
+
             // Iniciar UI
             resetUI(); // Limpiar cualquier estado anterior
             areaProgreso.style.display = 'block';
@@ -261,7 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 eventSource.close();
             }
 
-            const sseUrl = "{{ url_for('analisis.analisis_completo_stream') }}";
             eventSource = new EventSource(sseUrl);
 
             eventSource.onopen = () => addLogMessage('Conexión establecida.');

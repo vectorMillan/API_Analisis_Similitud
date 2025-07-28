@@ -316,8 +316,12 @@ def analisis_completo_stream():
     
     # 1. Obtener la instancia de la aplicación actual DENTRO de la ruta
     #    donde el contexto de la aplicación está activo.
+
+    ngram_value = request.args.get('ngram', default=1, type=int)
+    current_app.logger.info(f"Análisis solicitado con n-gramas de tamaño: {ngram_value}")
+
     app_instance = current_app._get_current_object()
     
     # 2. Pasar la instancia de la aplicación al generador.
     #    Esta es la línea que soluciona el TypeError.
-    return Response(realizar_analisis_completo_sse(app_instance), mimetype='text/event-stream')
+    return Response(realizar_analisis_completo_sse(app_instance, ngram_value=ngram_value), mimetype='text/event-stream')
