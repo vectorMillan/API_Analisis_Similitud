@@ -1,5 +1,3 @@
-# services/Procesamiento_Completo.py
-
 import json
 import time
 import traceback
@@ -14,7 +12,7 @@ def format_sse_event(data):
     """Formatea un diccionario como un evento SSE."""
     return f"data: {json.dumps(data)}\n\n"
 
-def realizar_analisis_completo_sse(app):
+def realizar_analisis_completo_sse(app, ngram_value=1):
     """
     Generador que orquesta la ejecución secuencial de todos los análisis
     y envía eventos de progreso (SSE) al cliente.
@@ -35,9 +33,9 @@ def realizar_analisis_completo_sse(app):
             # --- PASO 1: ANÁLISIS SINTÁCTICO ---
             yield format_sse_event({
                 "paso_actual": 1, "total_pasos": total_pasos, "estado": "procesando",
-                "mensaje": "Paso 1/3: Ejecutando análisis SINTÁCTICO de todos los proyectos..."
+                "mensaje": f"Paso 1/3: Ejecutando análisis SINTÁCTICO (N-gramas={ngram_value})..."
             })
-            resultado_sintactico = analizar_sintactico()
+            resultado_sintactico = analizar_sintactico(ngram_value)
             # Asumiendo que tus servicios devuelven 'estado' para errores
             if resultado_sintactico.get("estado") == "error":
                 raise Exception(f"Falló el análisis sintáctico: {resultado_sintactico.get('mensaje')}")

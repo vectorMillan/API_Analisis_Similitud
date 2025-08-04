@@ -122,7 +122,7 @@ def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id,
         traceback.print_exc()
 
 # --- Función para analizar un proyecto individual ---
-def analizar_proyecto(project_id_param, tolerancias): # Pasamos tolerancias como argumento
+def analizar_proyecto(project_id_param, tolerancias, ngrama_value = 1): # Pasamos tolerancias como argumento
 
     print(f"Iniciando análisis para el proyecto ID: {project_id_param}")
 
@@ -174,7 +174,7 @@ def analizar_proyecto(project_id_param, tolerancias): # Pasamos tolerancias como
             if texto1 and texto2: 
                 try:
                     # vectorizador = TfidfVectorizer()
-                    vectorizador = CountVectorizer(ngram_range=(1, 1), token_pattern=r'\b\w+\b') # Usar CountVectorizer para n-gramas
+                    vectorizador = CountVectorizer(ngram_range=(ngrama_value, ngrama_value), token_pattern=r'\b\w+\b') # Usar CountVectorizer para n-gramas
                     vectores = vectorizador.fit_transform([texto1, texto2])
                     if vectores.shape[1] > 0:
                         similitud_actual = cosine_similarity(vectores[0:1], vectores[1:2])[0][0]
@@ -204,7 +204,7 @@ def analizar_proyecto(project_id_param, tolerancias): # Pasamos tolerancias como
 
 
 # --- Nueva función para analizar todos los proyectos (adaptada) ---
-def analizar_todos_los_proyectos_service():
+def analizar_todos_los_proyectos_service(ngrama_value=1):
 
     print("Iniciando el análisis de todos los proyectos...")
 
@@ -237,7 +237,7 @@ def analizar_todos_los_proyectos_service():
             print(f"Procesando proyecto {i}/{total_proyectos_encontrados}: ID {project_id}")
             print(f"{'=' * 40}\n")
             
-            analizar_proyecto(project_id, tolerancias) # Pasar las tolerancias obtenidas
+            analizar_proyecto(project_id, tolerancias, ngrama_value = ngrama_value) # Pasar las tolerancias obtenidas
             proyectos_procesados_count +=1
 
         tiempo_total_segundos = time.time() - tiempo_inicio_total
