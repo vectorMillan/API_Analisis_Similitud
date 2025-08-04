@@ -71,28 +71,48 @@ def mostrar_proyectos_por_tematica(tematica_id):
     
     # Consulta paginada
     sql_query = text("""
-        SELECT 
+        SELECT
             p.id,
             p.name AS nombre_proyecto,
             COUNT(DISTINCT rf.user_id) AS num_integrantes,
-            (
-                SELECT COUNT(*)
-                FROM comparacion_similitud cs
-                WHERE cs.project_id = p.id
-                AND cs.similitud_detectada = 1
-            ) AS similitud_reportes,
+            
+            -- Se usa COALESCE para mostrar 0 si un proyecto no tiene similitudes
+            COALESCE(sc.count_integrantes_con_similitud, 0) AS integrantes_con_similitud,
+            
+            -- Se mantiene la lógica del CASE, que ahora opera sobre el LEFT JOIN principal
             CASE
-                WHEN (
-                    SELECT MIN(cs2.status_analisis)
-                    FROM comparacion_similitud cs2
-                    WHERE cs2.project_id = p.id
-                ) = 1 THEN '✅'
-                ELSE '❌'
+                WHEN COUNT(cs.id) = 0 THEN '❌' -- No hay análisis si no hay registros en comparacion_similitud
+                WHEN MIN(cs.status_analisis) = 0 THEN '❌' -- Algún análisis está pendiente
+                ELSE '✅' -- Todos los análisis están completos
             END AS analizado
+            
         FROM project p
         JOIN reportes_finales rf ON rf.project_id = p.id
+        LEFT JOIN comparacion_similitud cs ON cs.project_id = p.id
+        
+        -- Subconsulta en el FROM (tabla derivada) para precalcular los conteos de similitud
+        LEFT JOIN (
+            SELECT
+                project_id,
+                COUNT(DISTINCT user_id_similitud) AS count_integrantes_con_similitud
+            FROM (
+                SELECT project_id, usuario_1_id AS user_id_similitud
+                FROM comparacion_similitud
+                WHERE similitud_detectada = 1
+                
+                UNION -- UNION ya obtiene valores únicos de (project_id, user_id_similitud)
+                
+                SELECT project_id, usuario_2_id AS user_id_similitud
+                FROM comparacion_similitud
+                WHERE similitud_detectada = 1
+            ) AS all_users_with_similarity
+            GROUP BY project_id
+        ) AS sc ON sc.project_id = p.id
+
         WHERE p.id_thematic = :tematica_id
-        GROUP BY p.id, p.name
+        -- Agrupar por todas las columnas no agregadas del SELECT principal
+        GROUP BY p.id, p.name, sc.count_integrantes_con_similitud
+        ORDER BY p.id -- Añadir un ORDER BY para resultados consistentes en la paginación
         LIMIT :limit OFFSET :offset
     """)
     

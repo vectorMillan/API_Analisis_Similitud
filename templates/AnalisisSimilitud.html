@@ -97,7 +97,7 @@
                                         <td>{{ proyecto.id }}</td>
                                         <td>{{ proyecto.nombre_proyecto }}</td>
                                         <td>{{ proyecto.num_integrantes }}</td>
-                                        <td>{{ proyecto.similitud_reportes }}</td>
+                                        <td>{{ proyecto.integrantes_con_similitud }}</td>
                                         <td>{{ proyecto.analizado | safe }}</td>
                                         <td>
                                             <a href="{{ url_for('analisis.mostrar_detalles_proyecto', proyecto_id=proyecto.id) }}" class="btn btn-sm btn-info mb-1" title="Ver Detalles Sintácticos">

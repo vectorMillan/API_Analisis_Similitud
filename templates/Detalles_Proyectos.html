@@ -29,16 +29,16 @@
                                 <tr>
                                     <th>Usuarios Comparados</th>
                                     <th>Introducción (Sintáctico)</th>
-                                    <th>Introducción (Semántico)</th>
                                     <th>Marco Teórico (Sintáctico)</th>
-                                    <th>Marco Teórico (Semántico)</th>
                                     <th>Método (Sintáctico)</th>
-                                    <th>Método (Semántico)</th>
                                     <th>Resultados (Sintáctico)</th>
-                                    <th>Resultados (Semántico)</th>
                                     <th>Discusión (Sintáctico)</th>
-                                    <th>Discusión (Semántico)</th>
                                     <th>Conclusiones (Sintáctico)</th>
+                                    <th>Introducción (Semántico)</th>
+                                    <th>Marco Teórico (Semántico)</th>                                    
+                                    <th>Método (Semántico)</th>                                    
+                                    <th>Resultados (Semántico)</th>
+                                    <th>Discusión (Semántico)</th>
                                     <th>Conclusiones (Semántico)</th>
                                     <th>Secciones Duplicadas (Sintáctico)</th>
                                     <th>Secciones Duplicadas (Semántico)</th>
@@ -57,44 +57,44 @@
                                         {{ "%.2f"|format(detalle.intro_cs1 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.intro_cs2 > tolerancias.get('introduccion', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.intro_cs2 * 100) }}%
-                                    </td>
-                                    <td
                                         class="{% if detalle.marco_cs1 > tolerancias.get('marcoteorico', 0) %}table-danger{% endif %}">
                                         {{ "%.2f"|format(detalle.marco_cs1 * 100) }}%
-                                    </td>
-                                    <td
-                                        class="{% if detalle.marco_cs2 > tolerancias.get('marcoteorico', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.marco_cs2 * 100) }}%
                                     </td>
                                     <td
                                         class="{% if detalle.metodo_cs1 > tolerancias.get('metodo', 0) %}table-danger{% endif %}">
                                         {{ "%.2f"|format(detalle.metodo_cs1 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.metodo_cs2 > tolerancias.get('metodo', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.metodo_cs2 * 100) }}%
-                                    </td>
-                                    <td
                                         class="{% if detalle.res_cs1 > tolerancias.get('resultados', 0) %}table-danger{% endif %}">
                                         {{ "%.2f"|format(detalle.res_cs1 * 100) }}%
-                                    </td>
-                                    <td
-                                        class="{% if detalle.res_cs2 > tolerancias.get('resultados', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.res_cs2 * 100) }}%
                                     </td>
                                     <td
                                         class="{% if detalle.disc_cs1 > tolerancias.get('discusion', 0) %}table-danger{% endif %}">
                                         {{ "%.2f"|format(detalle.disc_cs1 * 100) }}%
                                     </td>
                                     <td
-                                        class="{% if detalle.disc_cs2 > tolerancias.get('discusion', 0) %}table-danger{% endif %}">
-                                        {{ "%.2f"|format(detalle.disc_cs2 * 100) }}%
-                                    </td>
-                                    <td
                                         class="{% if detalle.concl_cs1 > tolerancias.get('conclusiones', 0) %}table-danger{% endif %}">
                                         {{ "%.2f"|format(detalle.concl_cs1 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.intro_cs2 > tolerancias.get('introduccion', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.intro_cs2 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.marco_cs2 > tolerancias.get('marcoteorico', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.marco_cs2 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.metodo_cs2 > tolerancias.get('metodo', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.metodo_cs2 * 100) }}%
+                                    </td>                                    
+                                    <td
+                                        class="{% if detalle.res_cs2 > tolerancias.get('resultados', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.res_cs2 * 100) }}%
+                                    </td>
+                                    <td
+                                        class="{% if detalle.disc_cs2 > tolerancias.get('discusion', 0) %}table-danger{% endif %}">
+                                        {{ "%.2f"|format(detalle.disc_cs2 * 100) }}%
                                     </td>
                                     <td
                                         class="{% if detalle.concl_cs2 > tolerancias.get('conclusiones', 0) %}table-danger{% endif %}">
