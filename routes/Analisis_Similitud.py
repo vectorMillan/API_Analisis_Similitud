@@ -139,50 +139,32 @@ def mostrar_detalles_proyecto(proyecto_id):
     proyecto = db.session.execute(sql_proyecto, {"proyecto_id": proyecto_id}).fetchone()
     
     if not proyecto:
-        return redirect('/analisis-similitud')
+        flash(f"Proyecto con ID {proyecto_id} no encontrado.", "warning")
+        return redirect('/analisis-similitud-base') # Redirigir a la página base
     
-    # Consulta para obtener los detalles de similitud
+    # --- CONSULTA CORREGIDA ---
+    # Se ha simplificado para seleccionar solo de 'comparacion_similitud'
+    # y se han eliminado los alias para que los nombres de columna coincidan con la plantilla.
     sql_detalles = text("""
         SELECT
-        CONCAT(
-            u1.name, ' ', u1.falastname, ' ', u1.molastname,
-            '\n vs \n',
-            u2.name, ' ', u2.falastname, ' ', u2.molastname
-        ) AS usuarios_analizados,
-
-        -- Campos de comparacion_similitud
-        cs1.introduccion      AS intro_cs1,
-        cs1.marcoteorico      AS marco_cs1,
-        cs1.metodo            AS metodo_cs1,
-        cs1.resultados        AS res_cs1,
-        cs1.discusion         AS disc_cs1,
-        cs1.conclusiones      AS concl_cs1,
-        cs1.secciones_similares AS secs_cs1,
-        cs1.status_analisis as status_cs1,
-
-        -- Campos de comparacion_similitud2
-        cs2.introduccion      AS intro_cs2,
-        cs2.marcoteorico      AS marco_cs2,
-        cs2.metodo            AS metodo_cs2,
-        cs2.resultados        AS res_cs2,
-        cs2.discusion         AS disc_cs2,
-        cs2.conclusiones      AS concl_cs2,
-        cs2.secciones_similares AS secs_cs2,
-        cs2.status_analisis as status_cs2
-
-    FROM comparacion_similitud  cs1
-    JOIN comparacion_similitud2 cs2
-    ON cs1.project_id    = cs2.project_id
-    AND cs1.usuario_1_id  = cs2.usuario_1_id
-    AND cs1.usuario_2_id  = cs2.usuario_2_id
-
-    JOIN `user` u1
-    ON cs1.usuario_1_id = u1.id
-    JOIN `user` u2
-    ON cs1.usuario_2_id = u2.id
-
-    WHERE cs1.project_id = :proyecto_id
-    ORDER BY cs1.id;
+            CONCAT(
+                u1.name, ' ', u1.falastname, ' ', u1.molastname,
+                '\\n vs \\n',
+                u2.name, ' ', u2.falastname, ' ', u2.molastname
+            ) AS usuarios_analizados,
+            cs1.introduccion,
+            cs1.marcoteorico,
+            cs1.metodo,
+            cs1.resultados,
+            cs1.discusion,
+            cs1.conclusiones,
+            cs1.secciones_similares,
+            cs1.status_analisis
+        FROM comparacion_similitud cs1
+        JOIN `user` u1 ON cs1.usuario_1_id = u1.id
+        JOIN `user` u2 ON cs1.usuario_2_id = u2.id
+        WHERE cs1.project_id = :proyecto_id
+        ORDER BY cs1.id
     """)
     
     detalles = db.session.execute(sql_detalles, {"proyecto_id": proyecto_id}).fetchall()
@@ -194,9 +176,8 @@ def mostrar_detalles_proyecto(proyecto_id):
     for t in todas_tolerancias:
         # Convertimos los nombres de sección a minúsculas para mayor compatibilidad
         tolerancias[t.seccion.lower()] = t.tolerancia
-        # IMPRIMIR TOLERANCIAS
-        print(f"Sección: {t.seccion}, Tolerancia: {t.tolerancia}")
 
+    # La plantilla 'Detalles_Proyectos.html' ahora recibirá los datos con los nombres correctos
     return render_template('Detalles_Proyectos.html', 
                             proyecto=proyecto,
                             proyecto_id=proyecto_id,
