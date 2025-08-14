@@ -146,26 +146,21 @@ def mostrar_detalles_proyecto(proyecto_id):
     # Se ha simplificado para seleccionar solo de 'comparacion_similitud'
     # y se han eliminado los alias para que los nombres de columna coincidan con la plantilla.
     sql_detalles = text("""
-        SELECT
-            CONCAT(
-                u1.name, ' ', u1.falastname, ' ', u1.molastname,
-                '\\n vs \\n',
-                u2.name, ' ', u2.falastname, ' ', u2.molastname
-            ) AS usuarios_analizados,
-            cs1.introduccion,
-            cs1.marcoteorico,
-            cs1.metodo,
-            cs1.resultados,
-            cs1.discusion,
-            cs1.conclusiones,
-            cs1.secciones_similares,
-            cs1.status_analisis
-        FROM comparacion_similitud cs1
-        JOIN `user` u1 ON cs1.usuario_1_id = u1.id
-        JOIN `user` u2 ON cs1.usuario_2_id = u2.id
-        WHERE cs1.project_id = :proyecto_id
-        ORDER BY cs1.id
-    """)
+    SELECT
+        CONCAT(cs1.usuario_1_id, ' vs ', cs1.usuario_2_id) AS usuarios_analizados,
+        cs1.introduccion,
+        cs1.marcoteorico,
+        cs1.metodo,
+        cs1.resultados,
+        cs1.discusion,
+        cs1.conclusiones,
+        cs1.secciones_similares,
+        cs1.status_analisis
+    FROM comparacion_similitud cs1
+    WHERE cs1.project_id = :proyecto_id
+    ORDER BY cs1.id
+""")
+
     
     detalles = db.session.execute(sql_detalles, {"proyecto_id": proyecto_id}).fetchall()
     
