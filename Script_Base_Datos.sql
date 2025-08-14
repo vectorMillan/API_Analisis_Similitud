@@ -94,7 +94,145 @@ CREATE TABLE comparacion_similitud_5 (
     PRIMARY KEY (id)
 );
 
+CREATE TABLE comparacion_similitud_6 (
+    id int UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_1_id INT NOT NULL,
+    usuario_2_id INT NOT NULL,
+    project_id INT NOT NULL,
+    
+    introduccion FLOAT,
+    marcoteorico FLOAT,
+    metodo FLOAT,
+    resultados FLOAT,
+    discusion FLOAT,
+    conclusiones FLOAT,
+    
+    secciones_similares INT, -- número de secciones que superan el umbral de tolerancia
+    similitud_detectada INT, -- si tiene al menos una seccion con similitud, se colocara un 1, si no tiene ninguna seccion con similitud se colocara un 0
+    status_analisis TINYINT DEFAULT 0, -- 0: no analizado, 1: analizado
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE comparacion_tm (
+    id int UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_1_id INT NOT NULL,
+    usuario_2_id INT NOT NULL,
+    project_id INT NOT NULL,
+    
+    introduccion FLOAT,
+    marcoteorico FLOAT,
+    metodo FLOAT,
+    resultados FLOAT,
+    discusion FLOAT,
+    conclusiones FLOAT,
+    
+    secciones_similares INT, -- número de secciones que superan el umbral de tolerancia
+    similitud_detectada INT, -- si tiene al menos una seccion con similitud, se colocara un 1, si no tiene ninguna seccion con similitud se colocara un 0
+    status_analisis TINYINT DEFAULT 0, -- 0: no analizado, 1: analizado
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+);
+CREATE TABLE comparacion_tm_bigrama (
+    id int UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_1_id INT NOT NULL,
+    usuario_2_id INT NOT NULL,
+    project_id INT NOT NULL,
+    
+    introduccion FLOAT,
+    marcoteorico FLOAT,
+    metodo FLOAT,
+    resultados FLOAT,
+    discusion FLOAT,
+    conclusiones FLOAT,
+    
+    secciones_similares INT, -- número de secciones que superan el umbral de tolerancia
+    similitud_detectada INT, -- si tiene al menos una seccion con similitud, se colocara un 1, si no tiene ninguna seccion con similitud se colocara un 0
+    status_analisis TINYINT DEFAULT 0, -- 0: no analizado, 1: analizado
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE comparacion_tm_trigrama (
+    id int UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_1_id INT NOT NULL,
+    usuario_2_id INT NOT NULL,
+    project_id INT NOT NULL,
+    
+    introduccion FLOAT,
+    marcoteorico FLOAT,
+    metodo FLOAT,
+    resultados FLOAT,
+    discusion FLOAT,
+    conclusiones FLOAT,
+    
+    secciones_similares INT, -- número de secciones que superan el umbral de tolerancia
+    similitud_detectada INT, -- si tiene al menos una seccion con similitud, se colocara un 1, si no tiene ninguna seccion con similitud se colocara un 0
+    status_analisis TINYINT DEFAULT 0, -- 0: no analizado, 1: analizado
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE comparacion_tm_4grama (
+    id int UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_1_id INT NOT NULL,
+    usuario_2_id INT NOT NULL,
+    project_id INT NOT NULL,
+    
+    introduccion FLOAT,
+    marcoteorico FLOAT,
+    metodo FLOAT,
+    resultados FLOAT,
+    discusion FLOAT,
+    conclusiones FLOAT,
+    
+    secciones_similares INT, -- número de secciones que superan el umbral de tolerancia
+    similitud_detectada INT, -- si tiene al menos una seccion con similitud, se colocara un 1, si no tiene ninguna seccion con similitud se colocara un 0
+    status_analisis TINYINT DEFAULT 0, -- 0: no analizado, 1: analizado
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+);
+
 CREATE TABLE estadistica_tm (
+    id int UNSIGNED NOT NULL AUTO_INCREMENT,
+    project_id INT NOT NULL,
+    usuario_1_id INT NOT NULL,
+    introduccion_u1 int,
+    marcoteorico_u1 int,
+    metodo_u1 int,
+    resultados_u1 int,
+    discusion_u1 int,
+    conclusiones_u1 int,
+    palabras_tm_u1 text,
+    
+    usuario_2_id INT NOT NULL,
+    introduccion_u2 int,
+    marcoteorico_u2 int,
+    metodo_u2 int,
+    resultados_u2 int,
+    discusion_u2 int,
+    conclusiones_u2 int,
+    palabras_tm_u2 text,
+
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE estadistica_tm_b (
     id int UNSIGNED NOT NULL AUTO_INCREMENT,
     project_id INT NOT NULL,
     usuario_1_id INT NOT NULL,
