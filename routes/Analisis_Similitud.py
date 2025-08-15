@@ -123,6 +123,31 @@ def mostrar_detalles_proyecto(proyecto_id):
         flash(f"Proyecto con ID {proyecto_id} no encontrado.", "warning")
         return redirect('/analisis-similitud-base') # Redirigir a la página base
     
+    # --- NUEVA CONSULTA: Obtener el resumen de similitud por usuario ---
+    sql_resumen_usuarios = text("""
+        SELECT 
+            usuario_id,
+            CASE 
+                WHEN SUM(CASE WHEN secciones_similares > 0 THEN 1 ELSE 0 END) > 0 
+                    THEN 'Tiene similitud'
+                ELSE 'Sin similitud'
+            END AS estado_similitud
+        FROM (
+            SELECT project_id, usuario_1_id AS usuario_id, secciones_similares
+            FROM comparacion_similitud
+            WHERE project_id = :proyecto_id
+
+            UNION ALL
+
+            SELECT project_id, usuario_2_id AS usuario_id, secciones_similares
+            FROM comparacion_similitud
+            WHERE project_id = :proyecto_id
+        ) AS todos_usuarios
+        GROUP BY usuario_id
+        ORDER BY usuario_id;
+    """)
+    resumen_usuarios = db.session.execute(sql_resumen_usuarios, {"proyecto_id": proyecto_id}).fetchall()
+    
     # --- CONSULTA CORREGIDA ---
     # Se ha simplificado para seleccionar solo de 'comparacion_similitud'
     # y se han eliminado los alias para que los nombres de columna coincidan con la plantilla.
@@ -143,7 +168,6 @@ def mostrar_detalles_proyecto(proyecto_id):
     ORDER BY cs1.id
 """)
 
-    
     detalles = db.session.execute(sql_detalles, {"proyecto_id": proyecto_id}).fetchall()
     
     # Crear un diccionario con las tolerancias por sección
@@ -158,6 +182,7 @@ def mostrar_detalles_proyecto(proyecto_id):
     return render_template('Detalles_Proyectos.html', 
                             proyecto=proyecto,
                             proyecto_id=proyecto_id,
+                            resumen_usuarios=resumen_usuarios,
                             detalles=detalles,
                             tolerancias=tolerancias,
                             tipo_analisis="sintactico")

@@ -13,12 +13,56 @@
             </nav>
         </div>
     </div>
+    {# --- NUEVA TABLA DE RESUMEN POR USUARIO --- #}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4>Resumen de Similitud por Usuario</h4>
+                </div>
+                <div class="card-body">
+                    {% if resumen_usuarios %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID de Usuario</th>
+                                    <th>Estado General</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resumen in resumen_usuarios %}
+                                <tr>
+                                    <td>{{ resumen.usuario_id }}</td>
+                                    <td>
+                                        {% if resumen.estado_similitud == 'Tiene similitud' %}
+                                            <span class="badge bg-danger fs-6">Tiene similitud</span>
+                                        {% else %}
+                                            <span class="badge bg-success fs-6">Sin similitud</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        No hay datos de resumen de similitud disponibles para este proyecto.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- TABLA DETALLADA DE COMPARACIONES --- #}
 
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4>Análisis de Similitud - {{ proyecto.name }}</h4>
+                    <h4>Análisis de Similitud - {{ proyecto.project_id }}</h4>
                 </div>
 
                 <div class="card-body mt-4">
