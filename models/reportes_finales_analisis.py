@@ -15,6 +15,7 @@ class ReportesFinalesAnalisis(db.Model):
     resultados = db.Column(db.Text)
     discusion = db.Column(db.Text)
     conclusiones = db.Column(db.Text)
+    referencias = db.Column(db.Text)
     nombre_reporte = db.Column(db.String(600), nullable=False)
     revisor_id = db.Column(db.Integer, nullable=True)
     status = db.Column(db.Integer)

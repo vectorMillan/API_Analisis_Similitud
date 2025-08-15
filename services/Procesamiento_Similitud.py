@@ -68,6 +68,7 @@ def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id,
         sim_resultados = float(similitudes_dict.get('resultados', 0.0))
         sim_discusion = float(similitudes_dict.get('discusion', 0.0))
         sim_conclusiones = float(similitudes_dict.get('conclusiones', 0.0))
+        sim_referencias = float(similitudes_dict.get('referencias', 0.0))
         similitud_detectada_flag = 1 if num_secciones_similares > 0 else 0
         
         if u2_id == 0: 
@@ -90,6 +91,7 @@ def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id,
             registro_existente.resultados = sim_resultados
             registro_existente.discusion = sim_discusion
             registro_existente.conclusiones = sim_conclusiones
+            registro_existente.referencias = sim_referencias
             registro_existente.secciones_similares = num_secciones_similares
             registro_existente.similitud_detectada = similitud_detectada_flag
             registro_existente.status_analisis = 1
@@ -107,6 +109,7 @@ def insertar_o_actualizar_comparacion(usuario_1_id, usuario_2_id, project_id,
                 resultados=sim_resultados,
                 discusion=sim_discusion,
                 conclusiones=sim_conclusiones,
+                referencias=sim_referencias,
                 secciones_similares=num_secciones_similares,
                 similitud_detectada=similitud_detectada_flag,
                 status_analisis=1
@@ -139,7 +142,7 @@ def analizar_proyecto(project_id_param, tolerancias, ngrama_value = 1): # Pasamo
     
     lista_usuarios_con_reporte = list(reportes_por_usuario.keys())
     print(f"Usuarios con reportes en el proyecto {project_id_param}: {len(lista_usuarios_con_reporte)}. IDs: {lista_usuarios_con_reporte}")
-    columnas_secciones = ['introduccion', 'marcoteorico', 'metodo', 'resultados', 'discusion', 'conclusiones']
+    columnas_secciones = ['introduccion', 'marcoteorico', 'metodo', 'resultados', 'discusion', 'conclusiones', 'referencias']
 
     if len(lista_usuarios_con_reporte) <= 1:
         if len(lista_usuarios_con_reporte) == 1:

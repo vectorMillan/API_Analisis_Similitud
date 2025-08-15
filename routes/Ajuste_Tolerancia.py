@@ -12,7 +12,8 @@ def ajuste_tolerancia():
         "metodo", 
         "resultados", 
         "discusion", 
-        "conclusiones"
+        "conclusiones",
+        "referencias"
     ]
     
     # Obtener todas las secciones de la base de datos

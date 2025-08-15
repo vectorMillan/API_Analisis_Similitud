@@ -14,6 +14,7 @@ class ComparacionSimilitud(db.Model):
     resultados = db.Column(db.Float, default=0.0)
     discusion = db.Column(db.Float, default=0.0)
     conclusiones = db.Column(db.Float, default=0.0)
+    referencias = db.Column(db.Float, default=0.0)
     secciones_similares = db.Column(db.Integer, default=0)
     similitud_detectada = db.Column(db.Integer, default=0) # 0 o 1
     status_analisis = db.Column(db.Integer, default=0) 
@@ -22,7 +23,7 @@ class ComparacionSimilitud(db.Model):
 
     def __init__(self, usuario_1_id, usuario_2_id, project_id, 
                 introduccion=0.0, marcoteorico=0.0, metodo=0.0, 
-                resultados=0.0, discusion=0.0, conclusiones=0.0,
+                resultados=0.0, discusion=0.0, conclusiones=0.0, referencias=0.0,
                 secciones_similares=0, similitud_detectada=0, status_analisis=0):
         self.usuario_1_id = usuario_1_id
         self.usuario_2_id = usuario_2_id
@@ -33,6 +34,7 @@ class ComparacionSimilitud(db.Model):
         self.resultados = resultados
         self.discusion = discusion
         self.conclusiones = conclusiones
+        self.referencias = referencias
         self.secciones_similares = secciones_similares
         self.similitud_detectada = similitud_detectada
         self.status_analisis = status_analisis

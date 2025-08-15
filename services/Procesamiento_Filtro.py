@@ -24,12 +24,12 @@ def filtrar_y_guardar_reportes_service():
     sql_insert_query = text("""
         INSERT INTO reportes_finales_analisis (
             id, user_id, project_id, thematic_id, subtematica_id, introduccion,
-            marcoteorico, metodo, resultados, discusion, conclusiones,
+            marcoteorico, metodo, resultados, discusion, conclusiones, referencias,
             nombre_reporte, revisor_id, status, calificacion_final, created_at, updated_at
         )
         SELECT
             rf.id, rf.user_id, rf.project_id, rf.thematic_id, rf.subtematica_id, rf.introduccion,
-            rf.marcoteorico, rf.metodo, rf.resultados, rf.discusion, rf.conclusiones,
+            rf.marcoteorico, rf.metodo, rf.resultados, rf.discusion, rf.conclusiones, rf.referencias,
             rf.nombre_reporte,
             0, -- Valor fijo para revisor_id
             0, -- Valor fijo para status

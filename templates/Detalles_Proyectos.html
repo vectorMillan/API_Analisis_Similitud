@@ -34,6 +34,7 @@
                                 <th>Resultados (Sintáctico)</th>
                                 <th>Discusión (Sintáctico)</th>
                                 <th>Conclusiones (Sintáctico)</th>
+                                <th>Referencias (Sintáctico)</th>
                                 <th>Secciones Duplicadas (Sintáctico)</th>
                                 <th>Estado (Sintáctico)</th>
                             </tr>
@@ -80,6 +81,11 @@
                                 <td
                                     class="{% if detalle.conclusiones > tolerancias.get('conclusiones', 0) %}table-danger{% endif %}">
                                     {{ "%.2f"|format(detalle.conclusiones * 100) }}%
+                                </td>
+
+                                <td
+                                    class="{% if detalle.referencias > tolerancias.get('referencias', 0) %}table-danger{% endif %}">
+                                    {{ "%.2f"|format(detalle.referencias * 100) }}%
                                 </td>
                                 
                                 {# --- CORRECCIÓN: Se usa 'detalle.secciones_similares' --- #}

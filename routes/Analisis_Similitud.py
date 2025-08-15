@@ -39,80 +39,61 @@ def mostrar_tematicas_base():
 
 @analisis.route('/analisis-similitud/<int:tematica_id>')
 def mostrar_proyectos_por_tematica(tematica_id):
-    # Obtenemos las temáticas para el menú
     tematicas = Tematicas.query.filter_by(status=1).all()
     
-    # Parámetros de paginación
     pagina = request.args.get('pagina', 1, type=int)
     registros_por_pagina = 10
     
-    # Corregimos la consulta de conteo para reflejar la agrupación correcta
+    # --- CONSULTA DE CONTEO MODIFICADA ---
+    # Ahora cuenta directamente desde reportes_finales sin unirse a project.
     count_query = text("""
-        SELECT COUNT(*) as total
-        FROM (
-            SELECT p.id
-            FROM project p
-            JOIN reportes_finales rf ON rf.project_id = p.id
-            WHERE p.id_thematic = :tematica_id
-            GROUP BY p.id, p.name
-        ) as proyecto_count
+        SELECT COUNT(DISTINCT rf.project_id) as total
+        FROM reportes_finales rf
+        WHERE rf.thematic_id = :tematica_id
     """)
     
     result = db.session.execute(count_query, {"tematica_id": tematica_id}).fetchone()
-    total_registros = result[0] if result else 0
-    total_paginas = math.ceil(total_registros / registros_por_pagina)
+    total_registros = result[0] if result and result[0] is not None else 0
+    total_paginas = math.ceil(total_registros / registros_por_pagina) if total_registros > 0 else 0
     
-    # Si la página solicitada es mayor que el total de páginas, redireccionamos a la última página
     if pagina > total_paginas and total_paginas > 0:
-        return redirect(f'/analisis-similitud/{tematica_id}?pagina={total_paginas}')
+        return redirect(url_for('analisis.mostrar_proyectos_por_tematica', tematica_id=tematica_id, pagina=total_paginas))
     
-    # Calculamos el offset para la paginación
     offset = (pagina - 1) * registros_por_pagina
     
-    # Consulta paginada
+    # --- CONSULTA PRINCIPAL MODIFICADA ---
+    # Se eliminó la dependencia de la tabla 'project'.
+    # Ahora se usa 'rf.project_id' como el identificador y el nombre.
     sql_query = text("""
         SELECT
-            p.id,
-            p.name AS nombre_proyecto,
+            rf.project_id AS id,
+            rf.project_id AS nombre_proyecto, -- Se usa el ID como nombre para mostrar
             COUNT(DISTINCT rf.user_id) AS num_integrantes,
-            
-            -- Se usa COALESCE para mostrar 0 si un proyecto no tiene similitudes
-            COALESCE(sc.count_integrantes_con_similitud, 0) AS integrantes_con_similitud,
-            
-            -- Se mantiene la lógica del CASE, que ahora opera sobre el LEFT JOIN principal
+            COALESCE(sim_stats.integrantes_con_similitud, 0) AS integrantes_con_similitud,
             CASE
-                WHEN COUNT(cs.id) = 0 THEN '❌' -- No hay análisis si no hay registros en comparacion_similitud
-                WHEN MIN(cs.status_analisis) = 0 THEN '❌' -- Algún análisis está pendiente
-                ELSE '✅' -- Todos los análisis están completos
+                WHEN sim_stats.project_id IS NULL THEN '❌'
+                WHEN sim_stats.min_status = 0 THEN '❌'
+                ELSE '✅'
             END AS analizado
             
-        FROM project p
-        JOIN reportes_finales rf ON rf.project_id = p.id
-        LEFT JOIN comparacion_similitud cs ON cs.project_id = p.id
+        FROM reportes_finales rf
         
-        -- Subconsulta en el FROM (tabla derivada) para precalcular los conteos de similitud
         LEFT JOIN (
             SELECT
                 project_id,
-                COUNT(DISTINCT user_id_similitud) AS count_integrantes_con_similitud
+                MIN(status_analisis) AS min_status,
+                COUNT(DISTINCT CASE WHEN similitud_detectada = 1 THEN user_id_similitud END) AS integrantes_con_similitud
             FROM (
-                SELECT project_id, usuario_1_id AS user_id_similitud
-                FROM comparacion_similitud
-                WHERE similitud_detectada = 1
-                
-                UNION -- UNION ya obtiene valores únicos de (project_id, user_id_similitud)
-                
-                SELECT project_id, usuario_2_id AS user_id_similitud
-                FROM comparacion_similitud
-                WHERE similitud_detectada = 1
-            ) AS all_users_with_similarity
+                SELECT project_id, status_analisis, similitud_detectada, usuario_1_id AS user_id_similitud FROM comparacion_similitud
+                UNION ALL
+                SELECT project_id, status_analisis, similitud_detectada, usuario_2_id AS user_id_similitud FROM comparacion_similitud
+            ) AS all_comparisons
             GROUP BY project_id
-        ) AS sc ON sc.project_id = p.id
+        ) AS sim_stats ON rf.project_id = sim_stats.project_id
 
-        WHERE p.id_thematic = :tematica_id
-        -- Agrupar por todas las columnas no agregadas del SELECT principal
-        GROUP BY p.id, p.name, sc.count_integrantes_con_similitud
-        ORDER BY p.id -- Añadir un ORDER BY para resultados consistentes en la paginación
+        WHERE rf.thematic_id = :tematica_id
+        GROUP BY rf.project_id, sim_stats.project_id, sim_stats.integrantes_con_similitud, sim_stats.min_status
+        ORDER BY rf.project_id
         LIMIT :limit OFFSET :offset
     """)
     
@@ -135,7 +116,7 @@ def mostrar_proyectos_por_tematica(tematica_id):
 @analisis.route('/proyecto/<int:proyecto_id>/analisis')
 def mostrar_detalles_proyecto(proyecto_id):
     # Obtenemos el nombre del proyecto
-    sql_proyecto = text("SELECT name FROM project WHERE id = :proyecto_id")
+    sql_proyecto = text("SELECT project_id FROM reportes_finales WHERE project_id = :proyecto_id")
     proyecto = db.session.execute(sql_proyecto, {"proyecto_id": proyecto_id}).fetchone()
     
     if not proyecto:
@@ -154,6 +135,7 @@ def mostrar_detalles_proyecto(proyecto_id):
         cs1.resultados,
         cs1.discusion,
         cs1.conclusiones,
+        cs1.referencias,
         cs1.secciones_similares,
         cs1.status_analisis
     FROM comparacion_similitud cs1
