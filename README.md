@@ -28,3 +28,18 @@ Tambien tiene implementada una sección para modificar el umbral de tolerancia d
 - **Modelos:** sentence - BERT
 - **Frontend:** HTML, CSS, JavaScript
 - **Base de Datos:** MySQL
+
+## 📸 Capturas de Pantalla
+
+### Página Principal
+![Página Principal](img/Pagina_principal.jpg)
+
+### Análisis de Similitud
+![Análisis de Similitud](img/Analisis_similitud.jpg)
+
+### Detalles de Similitud
+![Detalle de Similitud 1](img/Detalle_similitud1.jpg)
+![Detalle de Similitud 2](img/Detalle_similitud2.jpg)
+
+### Ajuste de Tolerancia
+![Ajuste de Tolerancia](img/Ajuste_tolerancia.jpg)
