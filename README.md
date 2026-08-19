@@ -1,4 +1,4 @@
-# 🔎 Detección de Plagio en Reportes Científicos
+# 🔎 Detección de Similitud de texto en Reportes Científicos
 
 ## 📖 Descripción del Proyecto
 Este proyecto tiene la capacidad de analizar reportes que sean registrados en este evento, solo aplica el analisis entre reportes que sean del mismo proyecto. Al realizar los análisis aplica lo siguiente:
